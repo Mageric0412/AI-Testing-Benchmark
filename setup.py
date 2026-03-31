@@ -6,9 +6,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 # Python版本检查
 python_version = sys.version_info
-if python_version < (3, 10) or python_version >= (3, 13):
+if python_version < (3, 10) or python_version >= (3, 12):
     raise RuntimeError(
-        f"AI-Testing-Benchmark requires Python >= 3.10 and < 3.13. "
+        f"AI-Testing-Benchmark requires Python >= 3.10 and < 3.12. "
         f"当前版本: {python_version.major}.{python_version.minor}"
     )
 
@@ -32,17 +32,16 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Testing",
     ],
-    python_requires=">=3.10,<3.13",
+    python_requires=">=3.10,<3.12",
     install_requires=[
-        # 核心依赖 - 版本受限以确保兼容性
-        "pydantic>=2.0.0,<3.0.0",
+        # 核心依赖 - 版本受限以确保Python 3.11兼容性
+        "pydantic>=2.0.0,<2.10.0",
         "pytest>=7.4.0,<9.0.0",
-        "pandas>=2.0.0,<3.0.0",  # pandas 3.x 需要更多测试
-        "numpy>=1.24.0,<2.0.0",
+        "pandas>=2.0.0,<2.2.0",
+        "numpy>=1.24.0,<1.27.0",
         "datasets>=2.14.0,<3.0.0",
         "requests>=2.31.0,<3.0.0",
         "python-dotenv>=1.0.0",
@@ -58,10 +57,10 @@ setup(
             "ruff>=0.1.0",
             "mypy>=1.5.0,<1.15.0",
         ],
-        # LangTest集成 - 使用langtest>=2.0以获得Python 3.12支持
+        # LangTest集成
         "langtest": [
-            "langtest>=2.0.0",
-            "pandas>=2.0.0,<3.0.0",
+            "langtest>=1.10.0,<2.0.0",
+            "pandas>=2.0.0,<2.2.0",
         ],
         # RAGAS集成
         "ragas": [
@@ -73,10 +72,10 @@ setup(
         ],
         # 公平性测试 - aif360和fairlearn需要较旧的包版本
         "fairness": [
-            "aif360>=0.4.0,<1.0.0",
-            "fairlearn>=0.8.0,<1.0.0",
-            "scipy>=1.7.0,<2.0.0",
-            "scikit-learn>=1.0.0,<2.0.0",
+            "aif360>=0.4.0,<0.6.0",
+            "fairlearn>=0.8.0,<0.10.0",
+            "scipy>=1.7.0,<1.14.0",
+            "scikit-learn>=1.0.0,<1.6.0",
         ],
         # 完整安装 - 所有可选包
         "all": [

@@ -1,6 +1,7 @@
-# LangTest集成 - 支持Python 3.10, 3.11, 3.12
-# 注意: langtest >= 2.0 需要 pandas < 3.0.0
+# LangTest集成 - Python 3.10 - 3.11
+# 注意: langtest < 2.0 需要 pandas < 3.0.0
+# langtest >= 2.0 支持更新版本
 
-langtest>=2.0.0
-pandas>=2.0.0,<3.0.0  # langtest依赖pandas<3.0.0
-numpy>=1.24.0,<2.0.0
+langtest>=1.10.0,<2.0.0
+pandas>=2.0.0,<2.2.0
+numpy>=1.24.0,<1.27.0

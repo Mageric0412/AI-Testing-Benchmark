@@ -1,7 +1,5 @@
-# RAGAS集成 - RAG评估工具
-# 需要 Python >= 3.10
-
-ragas>=0.1.0
-pandas>=2.0.0,<3.0.0
-numpy>=1.24.0,<2.0.0
-datasets>=2.14.0
+# RAGAS集成 - Python 3.10 - 3.11
+ragas>=0.1.0,<0.3.0
+pandas>=2.0.0,<2.2.0
+numpy>=1.24.0,<1.27.0
+datasets>=2.14.0,<3.0.0
