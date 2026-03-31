@@ -1,5 +1,5 @@
 """
-Cloud migration AI evaluation module.
+云迁移AI评估模块。
 """
 
 from typing import Dict, List, Any, Optional
@@ -11,13 +11,13 @@ from ai_testing_benchmark.core.result import PhaseResult, ResultStatus, Severity
 
 class CloudMigrationEvaluator(BaseEvaluator):
     """
-    Evaluator for cloud migration AI capabilities.
+    云迁移AI能力的评估器。
 
-    Tests the four phases of cloud migration:
-    1. Assessment - infrastructure discovery, risk identification
-    2. Planning - sequencing, strategy recommendation
-    3. Execution - automated migration, rollback
-    4. Validation - functional, performance validation
+    测试云迁移的四个阶段:
+    1. 评估 - 基础设施发现、风险识别
+    2. 规划 - 排序、策略推荐
+    3. 执行 - 自动化迁移、回滚
+    4. 验证 - 功能、性能验证
     """
 
     def __init__(
@@ -31,13 +31,13 @@ class CloudMigrationEvaluator(BaseEvaluator):
         self.phase = config.get("phase", "assessment") if config else "assessment"
 
     def evaluate_single(self, test_case: Dict) -> EvaluationResult:
-        """Evaluate a single migration test case."""
+        """评估单个迁移测试用例。"""
         start_time = time.time()
 
         phase = test_case.get("phase", self.phase)
         test_id = test_case.get("id", "unknown")
 
-        self.logger.info(f"Evaluating {test_id} ({phase})")
+        self.logger.info(f"正在评估 {test_id} ({phase})")
 
         if phase == "assessment":
             result = self._evaluate_assessment(test_case)
@@ -63,7 +63,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
         )
 
     def _evaluate_assessment(self, test_case: Dict) -> Dict:
-        """Evaluate assessment phase capabilities."""
+        """评估评估阶段能力。"""
         category = test_case.get("category", "assessment")
 
         if category == "infrastructure_discovery":
@@ -78,13 +78,13 @@ class CloudMigrationEvaluator(BaseEvaluator):
             return self._evaluate_generic_assessment(test_case)
 
     def _evaluate_infrastructure_discovery(self, test_case: Dict) -> Dict:
-        """Evaluate infrastructure discovery accuracy."""
+        """评估基础设施发现准确率。"""
         response = self._call_model(test_case.get("input", {}).get("description", ""))
 
         expected_outputs = test_case.get("expected_outputs", {})
         predicted_outputs = response.get("discovered_resources", {})
 
-        # Calculate discovery metrics
+        # 计算发现指标
         discovery_rates = []
         for key, expected in expected_outputs.items():
             if isinstance(expected, dict) and "value" in expected:
@@ -102,7 +102,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
 
         discovery_score = sum(discovery_rates) / len(discovery_rates) if discovery_rates else 0
 
-        # False positive check
+        # 误报检查
         false_positives = response.get("false_positives", 0)
         total_predicted = len(predicted_outputs)
         fp_rate = false_positives / total_predicted if total_predicted > 0 else 0
@@ -124,13 +124,13 @@ class CloudMigrationEvaluator(BaseEvaluator):
         }
 
     def _evaluate_dependency_mapping(self, test_case: Dict) -> Dict:
-        """Evaluate dependency mapping accuracy."""
+        """评估依赖映射准确率。"""
         response = self._call_model(test_case.get("input", {}).get("description", ""))
 
         predicted_deps = response.get("dependencies", [])
         expected_deps = test_case.get("expected_outputs", {}).get("dependencies", [])
 
-        # Calculate dependency metrics
+        # 计算依赖指标
         true_positives = 0
         for dep in expected_deps:
             if dep in predicted_deps:
@@ -140,7 +140,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
         recall = true_positives / len(expected_deps) if expected_deps else 0
         f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
 
-        # Check for cycles
+        # 检查循环
         has_cycles = response.get("cycle_detected", False)
 
         overall_score = f1 if not has_cycles else f1 * 0.5
@@ -162,20 +162,20 @@ class CloudMigrationEvaluator(BaseEvaluator):
         }
 
     def _evaluate_risk_identification(self, test_case: Dict) -> Dict:
-        """Evaluate risk identification capabilities."""
+        """评估风险识别能力。"""
         response = self._call_model(test_case.get("input", {}).get("description", ""))
 
         identified_risks = response.get("risks", [])
         expected_risks = test_case.get("expected_outputs", {}).get("risks", {})
 
-        # Detection rate
+        # 检测率
         detected_count = sum(
             1 for risk_name in expected_risks.keys()
             if any(risk_name.lower() in r.get("name", "").lower() for r in identified_risks)
         )
         detection_rate = detected_count / len(expected_risks) if expected_risks else 0
 
-        # Severity classification accuracy
+        # 严重度分类准确率
         severity_correct = 0
         for risk in identified_risks:
             for exp_name, exp_data in expected_risks.items():
@@ -202,7 +202,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
         }
 
     def _evaluate_cost_estimation(self, test_case: Dict) -> Dict:
-        """Evaluate cost estimation accuracy."""
+        """评估成本估算准确率。"""
         response = self._call_model(str(test_case.get("input", {})))
 
         estimated_cost = response.get("estimated_cost", 0)
@@ -214,7 +214,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
         else:
             expected_val = expected_cost
 
-        # Accuracy within tolerance
+        # 精度在容差范围内
         if expected_val > 0:
             error = abs(estimated_cost - expected_val) / expected_val
         else:
@@ -236,7 +236,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
         }
 
     def _evaluate_planning(self, test_case: Dict) -> Dict:
-        """Evaluate planning phase capabilities."""
+        """评估规划阶段能力。"""
         category = test_case.get("category", "planning")
 
         if category == "sequencing_optimization":
@@ -247,23 +247,23 @@ class CloudMigrationEvaluator(BaseEvaluator):
             return self._evaluate_generic_planning(test_case)
 
     def _evaluate_sequencing(self, test_case: Dict) -> Dict:
-        """Evaluate migration sequencing optimization."""
+        """评估迁移排序优化。"""
         response = self._call_model(str(test_case.get("input", {})))
 
         predicted_order = response.get("migration_sequence", [])
         expected_order = test_case.get("expected_outputs", {}).get("migration_sequence", [])
         dependencies = test_case.get("input", {}).get("constraints", {}).get("dependencies", [])
 
-        # Check dependency satisfaction
+        # 检查依赖满足度
         dep_satisfied = self._check_dependencies(predicted_order, dependencies)
 
-        # Order match
+        # 顺序匹配
         order_match = sum(
             1 for e, p in zip(expected_order, predicted_order) if e == p
         ) / max(len(expected_order), 1)
 
-        # Makespan estimate quality (mock)
-        makespan_quality = 0.85  # Mock
+        # Makespan估计质量(模拟)
+        makespan_quality = 0.85
 
         overall_score = 0.4 * dep_satisfied + 0.3 * order_match + 0.3 * makespan_quality
 
@@ -282,7 +282,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
         }
 
     def _evaluate_strategy_recommendation(self, test_case: Dict) -> Dict:
-        """Evaluate migration strategy recommendations."""
+        """评估迁移策略推荐。"""
         response = self._call_model(str(test_case.get("input", {})))
 
         recommendations = response.get("recommendations", [])
@@ -306,15 +306,15 @@ class CloudMigrationEvaluator(BaseEvaluator):
         }
 
     def _evaluate_execution(self, test_case: Dict) -> Dict:
-        """Evaluate execution phase capabilities."""
+        """评估执行阶段能力。"""
         return {"passed": True, "score": 0.9, "metrics": {}, "details": {}}
 
     def _evaluate_validation(self, test_case: Dict) -> Dict:
-        """Evaluate validation phase capabilities."""
+        """评估验证阶段能力。"""
         return {"passed": True, "score": 0.9, "metrics": {}, "details": {}}
 
     def _check_dependencies(self, order: List[str], dependencies: List[tuple]) -> float:
-        """Check if order satisfies dependencies."""
+        """检查顺序是否满足依赖关系。"""
         if not dependencies:
             return 1.0
 
@@ -331,11 +331,11 @@ class CloudMigrationEvaluator(BaseEvaluator):
         return satisfied / len(dependencies)
 
     def _call_model(self, prompt: str) -> Dict:
-        """Call the model - placeholder."""
+        """调用模型 - 占位符。"""
         return {"risks": [], "dependencies": [], "discovery_rate": 0.9}
 
     def calculate_overall_score(self, results: List[EvaluationResult]) -> Dict:
-        """Calculate aggregated migration scores."""
+        """计算聚合迁移分数。"""
         if not results:
             return {"overall_score": 0.0, "phase_scores": {}}
 
@@ -361,12 +361,12 @@ class CloudMigrationEvaluator(BaseEvaluator):
         }
 
     def run_phase(self) -> PhaseResult:
-        """Run complete migration evaluation phase."""
+        """运行完整迁移评估阶段。"""
         phase_result = PhaseResult(phase="migration")
 
         test_cases = self._load_test_cases()
 
-        self.logger.info(f"Running {len(test_cases)} migration tests")
+        self.logger.info(f"正在运行 {len(test_cases)} 个迁移测试")
 
         for test_case in test_cases:
             result = self.evaluate_single(test_case)
@@ -379,7 +379,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
         return phase_result
 
     def _load_test_cases(self) -> List[Dict]:
-        """Load migration test cases."""
+        """加载迁移测试用例。"""
         return [
             {
                 "id": "TC-CM-ASSESS-001",
@@ -387,7 +387,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
                 "category": "infrastructure_discovery",
                 "scenario_id": "SS-001",
                 "input": {
-                    "description": "100 VMs, 150 virtual machines, 8 databases",
+                    "description": "100台虚拟机, 150个虚拟服务器, 8个数据库",
                     "data_export_available": False
                 },
                 "expected_outputs": {

@@ -1,5 +1,5 @@
 """
-Result types and data structures for evaluation results.
+评估结果类型和数据结构。
 """
 
 from typing import Dict, List, Any, Optional
@@ -9,7 +9,7 @@ from enum import Enum
 
 
 class ResultStatus(str, Enum):
-    """Status of an evaluation result."""
+    """评估结果的状态。"""
     PASS = "PASS"
     FAIL = "FAIL"
     WARNING = "WARNING"
@@ -18,7 +18,7 @@ class ResultStatus(str, Enum):
 
 
 class Severity(str, Enum):
-    """Severity levels for issues."""
+    """问题严重级别。"""
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -27,54 +27,54 @@ class Severity(str, Enum):
 
 
 class EvaluationResult(BaseModel):
-    """Complete evaluation result for a single test case."""
+    """单个测试用例的完整评估结果。"""
 
-    # Identification
+    # 标识
     test_case_id: str
     test_case_name: str
     category: str
     phase: str
 
-    # Status
+    # 状态
     status: ResultStatus = ResultStatus.PASS
     score: float = Field(ge=0.0, le=100.0)
     pass_threshold: float = 80.0
 
-    # Metrics
+    # 指标
     primary_metric: str = "accuracy"
     primary_score: float = 0.0
     secondary_metrics: Dict[str, float] = Field(default_factory=dict)
 
-    # Details
+    # 详情
     expected_output: Optional[Any] = None
     actual_output: Optional[Any] = None
     raw_response: Optional[str] = None
 
-    # Issues
+    # 问题
     issues: List[Dict[str, Any]] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
 
-    # Timing
+    # 时间
     execution_time_ms: float = 0.0
     timestamp: datetime = Field(default_factory=datetime.now)
 
-    # Metadata
+    # 元数据
     model: str = ""
     provider: str = ""
     test_data_source: Optional[str] = None
 
     @property
     def passed(self) -> bool:
-        """Check if result passed the threshold."""
+        """检查结果是否通过阈值。"""
         return self.status == ResultStatus.PASS and self.score >= self.pass_threshold
 
     @property
     def failed(self) -> bool:
-        """Check if result failed."""
+        """检查结果是否失败。"""
         return self.status in [ResultStatus.FAIL, ResultStatus.ERROR]
 
     def add_issue(self, severity: Severity, message: str, details: Optional[Dict] = None) -> None:
-        """Add an issue to the result."""
+        """向结果添加问题。"""
         self.issues.append({
             "severity": severity.value,
             "message": message,
@@ -85,7 +85,7 @@ class EvaluationResult(BaseModel):
 
 
 class PhaseResult(BaseModel):
-    """Aggregated results for an evaluation phase."""
+    """评估阶段的聚合结果。"""
 
     phase: str
     total_tests: int = 0
@@ -109,18 +109,18 @@ class PhaseResult(BaseModel):
 
     @property
     def pass_rate(self) -> float:
-        """Calculate pass rate percentage."""
+        """计算通过率百分比。"""
         if self.total_tests == 0:
             return 0.0
         return (self.passed_tests / self.total_tests) * 100
 
     @property
     def passed(self) -> bool:
-        """Check if phase passed overall."""
+        """检查阶段是否整体通过。"""
         return self.overall_score >= self.phase_threshold
 
     def add_result(self, result: EvaluationResult) -> None:
-        """Add a result and update aggregations."""
+        """添加结果并更新聚合。"""
         self.results.append(result)
         self.total_tests += 1
 
@@ -131,46 +131,46 @@ class PhaseResult(BaseModel):
         else:
             self.skipped_tests += 1
 
-        # Update issue counts
+        # 更新问题计数
         for issue in result.issues:
             severity = Severity(issue["severity"])
             self.issues_by_severity[severity] += 1
 
 
 class BenchmarkReport(BaseModel):
-    """Complete benchmark report."""
+    """完整的基准测试报告。"""
 
-    # Metadata
+    # 元数据
     benchmark_version: str = "1.0.0"
     report_version: str = "1.0.0"
     timestamp: datetime = Field(default_factory=datetime.now)
 
-    # Model info
+    # 模型信息
     model_name: str
     model_provider: str
 
-    # Overall results
+    # 总体结果
     overall_score: float = 0.0
     quality_gate_passed: bool = False
 
-    # Phase results
+    # 阶段结果
     phases: Dict[str, PhaseResult] = Field(default_factory=dict)
 
-    # Summary
+    # 摘要
     total_tests: int = 0
     total_passed: int = 0
     total_failed: int = 0
     critical_issues: int = 0
     high_issues: int = 0
 
-    # Configuration
+    # 配置
     config: Optional[Dict] = None
 
-    # Raw outputs (optional)
+    # 原始输出(可选)
     raw_outputs: Dict[str, Any] = Field(default_factory=dict)
 
     def calculate_overall_score(self) -> float:
-        """Calculate overall benchmark score from phase scores."""
+        """根据阶段分数计算总体基准分数。"""
         if not self.phases:
             return 0.0
 
@@ -195,12 +195,12 @@ class BenchmarkReport(BaseModel):
 
     def check_quality_gates(self, gates: Dict[str, float]) -> bool:
         """
-        Check if all quality gates are passed.
+        检查所有质量门禁是否通过。
 
-        Gates:
-        - overall_score: Minimum overall score
-        - critical_issues: Maximum critical issues allowed
-        - high_issues: Maximum high issues allowed
+        门禁:
+        - overall_score: 最低总体分数
+        - critical_issues: 允许的最大严重问题数
+        - high_issues: 允许的最大高优先级问题数
         """
         passed = True
 
@@ -217,7 +217,7 @@ class BenchmarkReport(BaseModel):
         return passed
 
     def to_dict(self, include_raw: bool = False) -> Dict:
-        """Convert report to dictionary."""
+        """将报告转换为字典。"""
         data = self.model_dump()
 
         if not include_raw:

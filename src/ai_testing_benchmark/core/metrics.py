@@ -1,5 +1,5 @@
 """
-Metrics calculation utilities.
+指标计算工具。
 """
 
 from typing import List, Dict, Any, Optional, Callable
@@ -17,12 +17,12 @@ from sklearn.metrics import (
 
 class MetricsCalculator:
     """
-    Utility class for calculating various evaluation metrics.
+    计算各种评估指标的工具类。
     """
 
     @staticmethod
     def accuracy(y_true: List, y_pred: List) -> float:
-        """Calculate accuracy."""
+        """计算准确率。"""
         return accuracy_score(y_true, y_pred)
 
     @staticmethod
@@ -33,13 +33,13 @@ class MetricsCalculator:
         zero_division: int = 0
     ) -> float:
         """
-        Calculate F1 score.
+        计算F1分数。
 
-        Args:
-            y_true: True labels
-            y_pred: Predicted labels
-            average: Averaging method ('micro', 'macro', 'weighted', 'binary')
-            zero_division: Value to return when there is no positive predictions
+        参数:
+            y_true: 真实标签
+            y_pred: 预测标签
+            average: 平均方法 ('micro', 'macro', 'weighted', 'binary')
+            zero_division: 当没有正预测时返回的值
         """
         return f1_score(y_true, y_pred, average=average, zero_division=zero_division)
 
@@ -50,7 +50,7 @@ class MetricsCalculator:
         average: str = "weighted",
         zero_division: int = 0
     ) -> float:
-        """Calculate precision."""
+        """计算精确率。"""
         return precision_score(y_true, y_pred, average=average, zero_division=zero_division)
 
     @staticmethod
@@ -60,7 +60,7 @@ class MetricsCalculator:
         average: str = "weighted",
         zero_division: int = 0
     ) -> float:
-        """Calculate recall."""
+        """计算召回率。"""
         return recall_score(y_true, y_pred, average=average, zero_division=zero_division)
 
     @staticmethod
@@ -69,31 +69,31 @@ class MetricsCalculator:
         y_pred_proba: List,
         multi_class: str = "ovr"
     ) -> float:
-        """Calculate ROC AUC score."""
+        """计算ROC AUC分数。"""
         return roc_auc_score(y_true, y_pred_proba, multi_class=multi_class)
 
     @staticmethod
     def mean_squared_error(y_true: List, y_pred: List) -> float:
-        """Calculate MSE."""
+        """计算MSE。"""
         return mean_squared_error(y_true, y_pred)
 
     @staticmethod
     def mean_absolute_error(y_true: List, y_pred: List) -> float:
-        """Calculate MAE."""
+        """计算MAE。"""
         return mean_absolute_error(y_true, y_pred)
 
     @staticmethod
     def rmse(y_true: List, y_pred: List) -> float:
-        """Calculate RMSE."""
+        """计算RMSE。"""
         return np.sqrt(mean_squared_error(y_true, y_pred))
 
     @staticmethod
     def mape(y_true: List, y_pred: List) -> float:
-        """Calculate MAPE (Mean Absolute Percentage Error)."""
+        """计算MAPE (平均绝对百分比误差)。"""
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
 
-        # Avoid division by zero
+        # 避免除以零
         mask = y_true != 0
         if not mask.any():
             return 0.0
@@ -107,9 +107,9 @@ class MetricsCalculator:
         n_gram: int = 4
     ) -> float:
         """
-        Calculate BLEU score (simplified version).
+        计算BLEU分数(简化版本)。
 
-        For production use, consider using sacrebleu or nltk.translate.bleu_score.
+        生产环境建议使用sacrebleu或nltk.translate.bleu_score。
         """
         from collections import Counter
 
@@ -119,11 +119,11 @@ class MetricsCalculator:
         if len(hypothesis_tokens) == 0:
             return 0.0
 
-        # Calculate n-gram precision
+        # 计算n-gram精确率
         precisions = []
         for i in range(1, min(n_gram + 1, 5)):
-            ref_ngrams = Counter(self._get_ngrams(reference_tokens, i))
-            hyp_ngrams = Counter(self._get_ngrams(hypothesis_tokens, i))
+            ref_ngrams = Counter(MetricsCalculator._get_ngrams(reference_tokens, i))
+            hyp_ngrams = Counter(MetricsCalculator._get_ngrams(hypothesis_tokens, i))
 
             overlap = sum((ref_ngrams & hyp_ngrams).values())
             total = sum(hyp_ngrams.values())
@@ -133,7 +133,7 @@ class MetricsCalculator:
             else:
                 precisions.append(overlap / total)
 
-        # Calculate brevity penalty
+        # 计算简短惩罚
         ref_len = len(reference_tokens)
         hyp_len = len(hypothesis_tokens)
 
@@ -142,7 +142,7 @@ class MetricsCalculator:
         else:
             bp = np.exp(1 - ref_len / hyp_len) if hyp_len > 0 else 0.0
 
-        # Geometric mean of precisions
+        # 精确率的几何平均
         if all(p == 0 for p in precisions):
             return 0.0
 
@@ -152,7 +152,7 @@ class MetricsCalculator:
 
     @staticmethod
     def _get_ngrams(tokens: List[str], n: int) -> List[tuple]:
-        """Get n-grams from token list."""
+        """从token列表获取n-gram。"""
         return list(zip(*[tokens[i:] for i in range(n)]))
 
     @staticmethod
@@ -162,9 +162,9 @@ class MetricsCalculator:
         beta: float = 1.0
     ) -> float:
         """
-        Calculate ROUGE-L (Longest Common Subsequence) score.
+        计算ROUGE-L (最长公共子序列)分数。
 
-        Simplified version - for production use sacrebleu.
+        简化版本 - 生产环境建议使用sacrebleu。
         """
         reference_tokens = reference.lower().split()
         hypothesis_tokens = hypothesis.lower().split()
@@ -186,10 +186,10 @@ class MetricsCalculator:
 
     @staticmethod
     def _lcs_length(seq1: List, seq2: List) -> int:
-        """Calculate length of longest common subsequence."""
+        """计算最长公共子序列长度。"""
         m, n = len(seq1), len(seq2)
 
-        # Space-optimized LCS
+        # 空间优化LCS
         prev = [0] * (n + 1)
         curr = [0] * (n + 1)
 
@@ -205,7 +205,7 @@ class MetricsCalculator:
 
     @staticmethod
     def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
-        """Calculate cosine similarity between two vectors."""
+        """计算两个向量之间的余弦相似度。"""
         vec1 = np.array(vec1)
         vec2 = np.array(vec2)
 
@@ -220,7 +220,7 @@ class MetricsCalculator:
 
     @staticmethod
     def spearman_correlation(rank1: List[float], rank2: List[float]) -> float:
-        """Calculate Spearman rank correlation coefficient."""
+        """计算Spearman等级相关系数。"""
         from scipy.stats import spearmanr
         return spearmanr(rank1, rank2)[0]
 
@@ -230,11 +230,11 @@ class MetricsCalculator:
         method: str = "mean"
     ) -> float:
         """
-        Aggregate multiple scores.
+        聚合多个分数。
 
-        Args:
-            scores: List of scores
-            method: Aggregation method ('mean', 'median', 'min', 'max', 'harmonic')
+        参数:
+            scores: 分数列表
+            method: 聚合方法 ('mean', 'median', 'min', 'max', 'harmonic')
         """
         if not scores:
             return 0.0
@@ -257,7 +257,7 @@ class MetricsCalculator:
         values: List[float],
         percentile: float
     ) -> float:
-        """Calculate percentile value."""
+        """计算百分位数。"""
         return np.percentile(values, percentile)
 
     @staticmethod
@@ -266,10 +266,10 @@ class MetricsCalculator:
         confidence: float = 0.95
     ) -> tuple:
         """
-        Calculate confidence interval for scores.
+        计算分数的置信区间。
 
-        Returns:
-            Tuple of (lower_bound, upper_bound)
+        返回:
+            (下限, 上限) 元组
         """
         from scipy import stats
 
@@ -281,26 +281,26 @@ class MetricsCalculator:
 
 
 class ThresholdEvaluator:
-    """Evaluate if metrics pass specified thresholds."""
+    """评估指标是否通过指定阈值的评估器。"""
 
     def __init__(self, thresholds: Dict[str, float]):
         """
-        Initialize with thresholds.
+        用阈值初始化。
 
-        Args:
-            thresholds: Dictionary of metric_name -> threshold_value
+        参数:
+            thresholds: 指标名称 -> 阈值值的字典
         """
         self.thresholds = thresholds
 
     def evaluate(self, metrics: Dict[str, float]) -> Dict[str, bool]:
         """
-        Evaluate if metrics pass thresholds.
+        评估指标是否通过阈值。
 
-        Args:
-            metrics: Dictionary of metric_name -> metric_value
+        参数:
+            metrics: 指标名称 -> 指标值的字典
 
-        Returns:
-            Dictionary of metric_name -> passed
+        返回:
+            指标名称 -> 是否通过的字典
         """
         results = {}
 
@@ -315,10 +315,10 @@ class ThresholdEvaluator:
         return results
 
     def all_passed(self, metrics: Dict[str, float]) -> bool:
-        """Check if all thresholds passed."""
+        """检查是否所有阈值都通过。"""
         return all(self.evaluate(metrics).values())
 
     def get_failures(self, metrics: Dict[str, float]) -> List[str]:
-        """Get list of metrics that failed."""
+        """获取失败的指标列表。"""
         results = self.evaluate(metrics)
         return [name for name, passed in results.items() if not passed]

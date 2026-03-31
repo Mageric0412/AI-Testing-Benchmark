@@ -1,10 +1,10 @@
 """
 AI-Testing-Benchmark
-A comprehensive evaluation framework for AI-guided cloud migration journey systems.
+面向AI引导云迁移旅程系统的综合评估框架。
 """
 
 __version__ = "1.0.0"
-__author__ = "AI Testing Team"
+__author__ = "AI测试团队"
 
 from ai_testing_benchmark.core.benchmark_runner import BenchmarkRunner
 from ai_testing_benchmark.core.config import BenchmarkConfig

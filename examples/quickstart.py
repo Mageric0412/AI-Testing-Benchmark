@@ -1,5 +1,5 @@
 """
-Quick start example for AI-Testing-Benchmark.
+AI-Testing-Benchmark 快速开始示例。
 """
 
 from ai_testing_benchmark import BenchmarkRunner
@@ -7,8 +7,8 @@ from ai_testing_benchmark.core.config import BenchmarkConfig, ModelConfig
 
 
 def main():
-    """Run a quick benchmark."""
-    # Create configuration
+    """运行快速基准测试。"""
+    # 创建配置
     config = BenchmarkConfig(
         model=ModelConfig(
             name="gpt-4",
@@ -17,17 +17,17 @@ def main():
         )
     )
 
-    # Initialize runner
+    # 初始化运行器
     runner = BenchmarkRunner(config=config, verbose=True)
 
-    # Run foundation evaluation only
-    print("Running foundation model evaluation...")
+    # 仅运行基础评估
+    print("正在运行基础模型评估...")
     foundation_results = runner.run_phase("foundation")
 
-    print(f"\nFoundation Phase Results:")
-    print(f"  Score: {foundation_results.overall_score:.2f}")
-    print(f"  Tests: {foundation_results.passed_tests}/{foundation_results.total_tests} passed")
-    print(f"  Pass Rate: {foundation_results.pass_rate:.1f}%")
+    print(f"\n基础阶段结果:")
+    print(f"  分数: {foundation_results.overall_score:.2f}")
+    print(f"  测试: {foundation_results.passed_tests}/{foundation_results.total_tests} 通过")
+    print(f"  通过率: {foundation_results.pass_rate:.1f}%")
 
     return foundation_results
 

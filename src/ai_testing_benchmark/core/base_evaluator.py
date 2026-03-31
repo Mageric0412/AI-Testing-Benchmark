@@ -1,5 +1,5 @@
 """
-Base evaluator class for all evaluation types.
+所有评估类型的基类评估器。
 """
 
 from abc import ABC, abstractmethod
@@ -10,7 +10,7 @@ import loguru
 
 
 class EvaluationResult(BaseModel):
-    """Container for evaluation results."""
+    """评估结果的容器。"""
 
     scenario_id: str
     test_case_id: str
@@ -31,11 +31,11 @@ class EvaluationResult(BaseModel):
 
 class BaseEvaluator(ABC):
     """
-    Abstract base class for all evaluators in the benchmark framework.
+    基准测试框架中所有评估器的抽象基类。
 
-    Subclasses must implement:
-    - evaluate_single(): Evaluate a single test case
-    - calculate_overall_score(): Aggregate results into overall score
+    子类必须实现:
+    - evaluate_single(): 评估单个测试用例
+    - calculate_overall_score(): 将结果聚合为总体分数
     """
 
     def __init__(
@@ -46,13 +46,13 @@ class BaseEvaluator(ABC):
         verbose: bool = False
     ):
         """
-        Initialize base evaluator.
+        初始化基础评估器。
 
-        Args:
-            model_name: Name of the model to evaluate
-            provider: Model provider (openai, anthropic, etc.)
-            config: Optional configuration dictionary
-            verbose: Enable verbose logging
+        参数:
+            model_name: 要评估的模型名称
+            provider: 模型提供商 (openai, anthropic等)
+            config: 可选配置字典
+            verbose: 启用详细日志
         """
         self.model_name = model_name
         self.provider = provider
@@ -68,26 +68,26 @@ class BaseEvaluator(ABC):
     @abstractmethod
     def evaluate_single(self, test_case: Dict) -> EvaluationResult:
         """
-        Evaluate a single test case.
+        评估单个测试用例。
 
-        Args:
-            test_case: Dictionary containing test case data
+        参数:
+            test_case: 包含测试用例数据的字典
 
-        Returns:
-            EvaluationResult with scores and metadata
+        返回:
+            带有分数和元数据的EvaluationResult
         """
         pass
 
     @abstractmethod
     def calculate_overall_score(self, results: List[EvaluationResult]) -> Dict:
         """
-        Calculate overall score from individual results.
+        从单个结果计算总体分数。
 
-        Args:
-            results: List of EvaluationResult objects
+        参数:
+            results: EvaluationResult对象列表
 
-        Returns:
-            Dictionary with aggregated scores
+        返回:
+            带有聚合分数的字典
         """
         pass
 
@@ -98,21 +98,21 @@ class BaseEvaluator(ABC):
         early_stopping_threshold: float = 0.5
     ) -> Dict:
         """
-        Run evaluation on a list of test cases.
+        在测试用例列表上运行评估。
 
-        Args:
-            test_cases: List of test case dictionaries
-            stop_on_first_failure: Stop if any test fails
-            early_stopping_threshold: Threshold for early stopping
+        参数:
+            test_cases: 测试用例字典列表
+            stop_on_first_failure: 任何测试失败时停止
+            early_stopping_threshold: 提前停止的阈值
 
-        Returns:
-            Dictionary containing all results and summary
+        返回:
+            包含所有结果和摘要的字典
         """
         results = []
         failed_count = 0
 
         for i, test_case in enumerate(test_cases):
-            self.logger.info(f"Evaluating test case {i+1}/{len(test_cases)}: {test_case.get('id', 'unknown')}")
+            self.logger.info(f"正在评估测试用例 {i+1}/{len(test_cases)}: {test_case.get('id', 'unknown')}")
 
             try:
                 result = self.evaluate_single(test_case)
@@ -120,18 +120,18 @@ class BaseEvaluator(ABC):
 
                 if not result.passed:
                     failed_count += 1
-                    self.logger.warning(f"Test case {test_case.get('id')} failed with score {result.score}")
+                    self.logger.warning(f"测试用例 {test_case.get('id')} 失败，分数 {result.score}")
 
                     if stop_on_first_failure:
-                        self.logger.warning("Stopping due to first failure")
+                        self.logger.warning("因首次失败而停止")
                         break
 
                     if failed_count / len(test_cases) > (1 - early_stopping_threshold):
-                        self.logger.warning("Early stopping threshold reached")
+                        self.logger.warning("已达到提前停止阈值")
                         break
 
             except Exception as e:
-                self.logger.error(f"Error evaluating test case {test_case.get('id')}: {str(e)}")
+                self.logger.error(f"评估测试用例 {test_case.get('id')} 时出错: {str(e)}")
                 results.append(EvaluationResult(
                     scenario_id=test_case.get("scenario_id", "unknown"),
                     test_case_id=test_case.get("id", "unknown"),
@@ -152,35 +152,35 @@ class BaseEvaluator(ABC):
 
     def _build_evaluation_prompt(self, test_case: Dict, system_prompt: Optional[str] = None) -> str:
         """
-        Build prompt for evaluation.
+        构建评估提示词。
 
-        Args:
-            test_case: Test case data
-            system_prompt: Optional system prompt override
+        参数:
+            test_case: 测试用例数据
+            system_prompt: 可选的系统提示词覆盖
 
-        Returns:
-            Formatted prompt string
+        返回:
+            格式化的提示词字符串
         """
         base_prompt = system_prompt or self.config.get("system_prompt", "")
 
         prompt_parts = [base_prompt]
 
         if "description" in test_case:
-            prompt_parts.append(f"\n\nTask Description:\n{test_case['description']}")
+            prompt_parts.append(f"\n\n任务描述:\n{test_case['description']}")
 
         if "input" in test_case:
             if isinstance(test_case["input"], dict):
-                prompt_parts.append(f"\n\nInput Data:\n{self._format_dict(test_case['input'])}")
+                prompt_parts.append(f"\n\n输入数据:\n{self._format_dict(test_case['input'])}")
             else:
-                prompt_parts.append(f"\n\nInput:\n{test_case['input']}")
+                prompt_parts.append(f"\n\n输入:\n{test_case['input']}")
 
         if "question" in test_case:
-            prompt_parts.append(f"\n\nQuestion:\n{test_case['question']}")
+            prompt_parts.append(f"\n\n问题:\n{test_case['question']}")
 
         return "\n\n".join(prompt_parts)
 
     def _format_dict(self, d: Dict, indent: int = 0) -> str:
-        """Format dictionary for display in prompt."""
+        """格式化字典以在提示词中显示。"""
         lines = []
         for key, value in d.items():
             if isinstance(value, dict):
@@ -196,13 +196,13 @@ class BaseEvaluator(ABC):
 
     def _extract_model_response(self, raw_response: Any) -> str:
         """
-        Extract text response from model output.
+        从模型输出中提取文本响应。
 
-        Args:
-            raw_response: Raw model response
+        参数:
+            raw_response: 原始模型响应
 
-        Returns:
-            Extracted text string
+        返回:
+            提取的文本字符串
         """
         if isinstance(raw_response, str):
             return raw_response

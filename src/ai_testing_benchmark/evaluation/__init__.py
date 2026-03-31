@@ -1,5 +1,5 @@
 """
-Evaluation module - Foundation model evaluation.
+评估模块 - 基础模型评估。
 """
 
 from ai_testing_benchmark.evaluation.foundation import FoundationModelEvaluator

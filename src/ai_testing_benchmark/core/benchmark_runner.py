@@ -1,5 +1,5 @@
 """
-Benchmark runner - orchestrates all evaluation phases.
+基准测试运行器 - 协调所有评估阶段。
 """
 
 from typing import Dict, List, Any, Optional
@@ -25,10 +25,9 @@ from ai_testing_benchmark.performance import PerformanceEvaluator
 
 class BenchmarkRunner:
     """
-    Main orchestrator for running comprehensive AI benchmarks.
+    运行综合AI基准测试的主要协调器。
 
-    The runner manages all evaluation phases, aggregates results,
-    and generates comprehensive reports.
+    运行器管理所有评估阶段、聚合结果并生成综合报告。
     """
 
     def __init__(
@@ -38,12 +37,12 @@ class BenchmarkRunner:
         verbose: bool = False
     ):
         """
-        Initialize benchmark runner.
+        初始化基准测试运行器。
 
-        Args:
-            config: Optional BenchmarkConfig object
-            config_path: Optional path to config file
-            verbose: Enable verbose logging
+        参数:
+            config: 可选的BenchmarkConfig对象
+            config_path: 可选的配置文件路径
+            verbose: 启用详细日志
         """
         self.logger = loguru.logger
 
@@ -52,7 +51,7 @@ class BenchmarkRunner:
         else:
             self.logger.disable("ai_testing_benchmark")
 
-        # Load configuration
+        # 加载配置
         if config:
             self.config = config
         elif config_path:
@@ -60,19 +59,19 @@ class BenchmarkRunner:
         else:
             self.config = ConfigLoader.load()
 
-        # Initialize phase evaluators
+        # 初始化阶段评估器
         self.evaluators: Dict[str, Any] = {}
 
         self._initialize_evaluators()
 
-        # Results storage
+        # 结果存储
         self.report: Optional[BenchmarkReport] = None
 
     def _initialize_evaluators(self) -> None:
-        """Initialize all phase evaluators based on configuration."""
-        self.logger.info("Initializing phase evaluators")
+        """根据配置初始化所有阶段评估器。"""
+        self.logger.info("正在初始化阶段评估器")
 
-        # Foundation Model Evaluator
+        # 基础模型评估器
         if self.config.is_phase_enabled("foundation"):
             self.evaluators["foundation"] = FoundationModelEvaluator(
                 model_name=self.config.model.name,
@@ -81,7 +80,7 @@ class BenchmarkRunner:
                 verbose=self.logger._core.enabled
             )
 
-        # Dialogue Evaluator
+        # 对话评估器
         if self.config.is_phase_enabled("dialogue"):
             self.evaluators["dialogue"] = DialogueEvaluator(
                 model_name=self.config.model.name,
@@ -90,7 +89,7 @@ class BenchmarkRunner:
                 verbose=self.logger._core.enabled
             )
 
-        # Cloud Migration Evaluator
+        # 云迁移评估器
         if self.config.is_phase_enabled("migration"):
             self.evaluators["migration"] = CloudMigrationEvaluator(
                 model_name=self.config.model.name,
@@ -99,7 +98,7 @@ class BenchmarkRunner:
                 verbose=self.logger._core.enabled
             )
 
-        # Safety Evaluator
+        # 安全评估器
         if self.config.is_phase_enabled("safety"):
             self.evaluators["safety"] = SafetyEvaluator(
                 model_name=self.config.model.name,
@@ -108,7 +107,7 @@ class BenchmarkRunner:
                 verbose=self.logger._core.enabled
             )
 
-        # Performance Evaluator
+        # 性能评估器
         if self.config.is_phase_enabled("performance"):
             self.evaluators["performance"] = PerformanceEvaluator(
                 model_name=self.config.model.name,
@@ -117,7 +116,7 @@ class BenchmarkRunner:
                 verbose=self.logger._core.enabled
             )
 
-        self.logger.info(f"Initialized {len(self.evaluators)} evaluators")
+        self.logger.info(f"已初始化 {len(self.evaluators)} 个评估器")
 
     def run_full_benchmark(
         self,
@@ -125,16 +124,16 @@ class BenchmarkRunner:
         stop_on_first_failure: bool = False
     ) -> BenchmarkReport:
         """
-        Run the complete benchmark across all (or specified) phases.
+        在所有或指定阶段上运行完整基准测试。
 
-        Args:
-            phases: Optional list of phases to run. If None, runs all enabled phases.
-            stop_on_first_failure: Stop if any critical test fails
+        参数:
+            phases: 要运行的阶段列表。如果为None，运行所有已启用的阶段。
+            stop_on_first_failure: 如果任何关键测试失败则停止
 
-        Returns:
-            BenchmarkReport with all results
+        返回:
+            包含所有结果的BenchmarkReport
         """
-        self.logger.info("Starting full benchmark execution")
+        self.logger.info("开始执行完整基准测试")
         start_time = datetime.now()
 
         if phases is None:
@@ -148,11 +147,11 @@ class BenchmarkRunner:
 
         for phase in phases:
             if phase not in self.evaluators:
-                self.logger.warning(f"Phase {phase} not available, skipping")
+                self.logger.warning(f"阶段 {phase} 不可用，跳过")
                 continue
 
             self.logger.info(f"\n{'='*60}")
-            self.logger.info(f"Running Phase: {phase.upper()}")
+            self.logger.info(f"正在运行阶段: {phase.upper()}")
             self.logger.info(f"{'='*60}")
 
             phase_start = datetime.now()
@@ -162,30 +161,30 @@ class BenchmarkRunner:
                 report.phases[phase] = phase_result
 
             except Exception as e:
-                self.logger.error(f"Error running phase {phase}: {str(e)}")
+                self.logger.error(f"运行阶段 {phase} 时出错: {str(e)}")
                 phase_result = PhaseResult(phase=phase)
                 phase_result.status = ResultStatus.ERROR
                 report.phases[phase] = phase_result
 
             phase_duration = (datetime.now() - phase_start).total_seconds() * 1000
-            self.logger.info(f"Phase {phase} completed in {phase_duration:.2f}ms")
-            self.logger.info(f"Phase score: {phase_result.overall_score:.2f}")
+            self.logger.info(f"阶段 {phase} 完成，耗时 {phase_duration:.2f}ms")
+            self.logger.info(f"阶段分数: {phase_result.overall_score:.2f}")
 
-            # Check for critical failures
+            # 检查关键失败
             if phase_result.issues_by_severity.get("CRITICAL", 0) > 0:
-                self.logger.error(f"Critical issues found in phase {phase}")
+                self.logger.error(f"在阶段 {phase} 中发现严重问题")
 
                 if stop_on_first_failure:
-                    self.logger.error("Stopping benchmark due to critical failure")
+                    self.logger.error("因严重失败而停止基准测试")
                     break
 
-        # Calculate overall score
+        # 计算总体分数
         report.calculate_overall_score()
 
-        # Check quality gates
+        # 检查质量门禁
         report.check_quality_gates(self.config.quality_gates)
 
-        # Calculate summary statistics
+        # 计算汇总统计
         for phase_result in report.phases.values():
             report.total_tests += phase_result.total_tests
             report.total_passed += phase_result.passed_tests
@@ -195,9 +194,9 @@ class BenchmarkRunner:
 
         total_duration = (datetime.now() - start_time).total_seconds() * 1000
         self.logger.info(f"\n{'='*60}")
-        self.logger.info(f"Benchmark completed in {total_duration:.2f}ms")
-        self.logger.info(f"Overall Score: {report.overall_score:.2f}")
-        self.logger.info(f"Quality Gates: {'PASSED' if report.quality_gate_passed else 'FAILED'}")
+        self.logger.info(f"基准测试完成，耗时 {total_duration:.2f}ms")
+        self.logger.info(f"总体分数: {report.overall_score:.2f}")
+        self.logger.info(f"质量门禁: {'通过' if report.quality_gate_passed else '未通过'}")
         self.logger.info(f"{'='*60}")
 
         self.report = report
@@ -205,17 +204,17 @@ class BenchmarkRunner:
 
     def run_phase(self, phase: str, test_cases: Optional[List[Dict]] = None) -> PhaseResult:
         """
-        Run a specific phase.
+        运行特定阶段。
 
-        Args:
-            phase: Phase name
-            test_cases: Optional specific test cases to run
+        参数:
+            phase: 阶段名称
+            test_cases: 可选的特定测试用例
 
-        Returns:
-            PhaseResult for the specified phase
+        返回:
+            该阶段的PhaseResult
         """
         if phase not in self.evaluators:
-            raise ValueError(f"Unknown phase: {phase}")
+            raise ValueError(f"未知阶段: {phase}")
 
         evaluator = self.evaluators[phase]
 
@@ -231,18 +230,18 @@ class BenchmarkRunner:
         include_raw: bool = False
     ) -> str:
         """
-        Generate benchmark report.
+        生成基准测试报告。
 
-        Args:
-            output_format: Format for output (json, html)
-            output_path: Optional path to save report
-            include_raw: Include raw model outputs
+        参数:
+            output_format: 输出格式 ('json' 或 'html')
+            output_path: 保存报告的可选路径
+            include_raw: 包含原始模型输出
 
-        Returns:
-            Report as string
+        返回:
+            字符串格式的报告
         """
         if not self.report:
-            raise ValueError("No report available. Run benchmark first.")
+            raise ValueError("没有可用的报告。请先运行基准测试。")
 
         if output_format == "json":
             report_str = json.dumps(
@@ -253,20 +252,20 @@ class BenchmarkRunner:
         elif output_format == "html":
             report_str = self._generate_html_report()
         else:
-            raise ValueError(f"Unknown output format: {output_format}")
+            raise ValueError(f"未知输出格式: {output_format}")
 
         if output_path:
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, 'w') as f:
                 f.write(report_str)
-            self.logger.info(f"Report saved to {output_path}")
+            self.logger.info(f"报告已保存至 {output_path}")
 
         return report_str
 
     def _generate_html_report(self) -> str:
-        """Generate HTML report."""
+        """生成HTML报告。"""
         if not self.report:
-            return "<p>No report available</p>"
+            return "<p>没有可用的报告</p>"
 
         phases_html = []
         for phase_name, phase_result in self.report.phases.items():
@@ -275,10 +274,10 @@ class BenchmarkRunner:
             phases_html.append(f"""
             <div class="phase" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
                 <h2 style="color: #{status_color};">
-                    {phase_name.upper()} - Score: {phase_result.overall_score:.2f}
-                    <span style="font-size: 14px;">({phase_result.passed_tests}/{phase_result.total_tests} passed)</span>
+                    {phase_name.upper()} - 分数: {phase_result.overall_score:.2f}
+                    <span style="font-size: 14px;">({phase_result.passed_tests}/{phase_result.total_tests} 通过)</span>
                 </h2>
-                <p>Pass Rate: {phase_result.pass_rate:.1f}%</p>
+                <p>通过率: {phase_result.pass_rate:.1f}%</p>
             </div>
             """)
 
@@ -286,7 +285,7 @@ class BenchmarkRunner:
         <!DOCTYPE html>
         <html>
         <head>
-            <title>AI Testing Benchmark Report</title>
+            <title>AI测试基准报告</title>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 40px; }}
                 .header {{ background: #2c3e50; color: white; padding: 20px; border-radius: 8px; }}
@@ -297,13 +296,13 @@ class BenchmarkRunner:
         </head>
         <body>
             <div class="header">
-                <h1>AI Testing Benchmark Report</h1>
-                <p>Model: {self.report.model_name}</p>
-                <p>Provider: {self.report.model_provider}</p>
+                <h1>AI测试基准报告</h1>
+                <p>模型: {self.report.model_name}</p>
+                <p>提供商: {self.report.model_provider}</p>
                 <p class="overall-score {'passed' if self.report.quality_gate_passed else 'failed'}">
-                    Overall Score: {self.report.overall_score:.2f}
+                    总体分数: {self.report.overall_score:.2f}
                 </p>
-                <p>Quality Gates: {'PASSED' if self.report.quality_gate_passed else 'FAILED'}</p>
+                <p>质量门禁: {'通过' if self.report.quality_gate_passed else '未通过'}</p>
             </div>
             <div class="phases">
                 {''.join(phases_html)}
@@ -313,6 +312,6 @@ class BenchmarkRunner:
         """
 
     def save_config(self, path: str) -> None:
-        """Save current configuration to file."""
+        """保存当前配置到文件。"""
         self.config.to_yaml(path)
-        self.logger.info(f"Configuration saved to {path}")
+        self.logger.info(f"配置已保存至 {path}")

@@ -1,6 +1,6 @@
 """
-Core module for AI-Testing-Benchmark.
-Contains base classes, interfaces, and common utilities.
+AI-Testing-Benchmark核心模块。
+包含基础类、接口和通用工具。
 """
 
 from ai_testing_benchmark.core.base_evaluator import BaseEvaluator

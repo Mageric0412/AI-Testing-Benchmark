@@ -1,5 +1,5 @@
 """
-Benchmark configuration management.
+基准测试配置管理。
 """
 
 from typing import Dict, List, Any, Optional
@@ -10,7 +10,7 @@ import os
 
 
 class ModelConfig(BaseModel):
-    """Configuration for the model under evaluation."""
+    """被评估模型的配置。"""
 
     name: str
     provider: str = "openai"
@@ -24,7 +24,7 @@ class ModelConfig(BaseModel):
 
 
 class ThresholdConfig(BaseModel):
-    """Configuration for evaluation thresholds."""
+    """评估阈值配置。"""
 
     accuracy: float = 0.85
     f1_score: float = 0.83
@@ -34,7 +34,7 @@ class ThresholdConfig(BaseModel):
 
 
 class EvaluationPhaseConfig(BaseModel):
-    """Configuration for an evaluation phase."""
+    """评估阶段配置。"""
 
     enabled: bool = True
     tests: List[str] = Field(default_factory=list)
@@ -44,32 +44,31 @@ class EvaluationPhaseConfig(BaseModel):
 
 class BenchmarkConfig(BaseModel):
     """
-    Main configuration for AI-Testing-Benchmark.
+    AI-Testing-Benchmark的主要配置类。
 
-    This class loads and validates the complete benchmark configuration
-    including model settings, phase configurations, and thresholds.
+    此类加载并验证完整的基准测试配置，包括模型设置、阶段配置和阈值。
     """
 
     version: str = "1.0.0"
 
-    # Model configuration
+    # 模型配置
     model: ModelConfig
 
-    # Evaluation phases
+    # 评估阶段
     foundation: EvaluationPhaseConfig = Field(default_factory=EvaluationPhaseConfig)
     dialogue: EvaluationPhaseConfig = Field(default_factory=EvaluationPhaseConfig)
     migration: EvaluationPhaseConfig = Field(default_factory=EvaluationPhaseConfig)
     safety: EvaluationPhaseConfig = Field(default_factory=EvaluationPhaseConfig)
     performance: EvaluationPhaseConfig = Field(default_factory=EvaluationPhaseConfig)
 
-    # Reporting
+    # 报告配置
     reporting: Dict[str, Any] = Field(default_factory=lambda: {
         "format": ["json"],
         "output_dir": "./results",
         "include_raw_outputs": True
     })
 
-    # Quality gates
+    # 质量门禁
     quality_gates: Dict[str, float] = Field(default_factory=lambda: {
         "overall_score": 80.0,
         "critical_issues": 0,
@@ -79,13 +78,13 @@ class BenchmarkConfig(BaseModel):
     @classmethod
     def from_yaml(cls, path: str) -> "BenchmarkConfig":
         """
-        Load configuration from YAML file.
+        从YAML文件加载配置。
 
-        Args:
-            path: Path to YAML configuration file
+        参数:
+            path: YAML配置文件路径
 
-        Returns:
-            BenchmarkConfig instance
+        返回:
+            BenchmarkConfig实例
         """
         with open(path, 'r') as f:
             config_dict = yaml.safe_load(f)
@@ -95,15 +94,15 @@ class BenchmarkConfig(BaseModel):
     @classmethod
     def from_dict(cls, config_dict: Dict) -> "BenchmarkConfig":
         """
-        Create configuration from dictionary.
+        从字典创建配置。
 
-        Args:
-            config_dict: Configuration dictionary
+        参数:
+            config_dict: 配置字典
 
-        Returns:
-            BenchmarkConfig instance
+        返回:
+            BenchmarkConfig实例
         """
-        # Resolve environment variables in credentials
+        # 解析凭证中的环境变量
         if "model" in config_dict and "credentials" in config_dict["model"]:
             credentials = config_dict["model"]["credentials"]
             for key, value in credentials.items():
@@ -116,16 +115,16 @@ class BenchmarkConfig(BaseModel):
     @classmethod
     def from_env(cls) -> "BenchmarkConfig":
         """
-        Create configuration from environment variables.
+        从环境变量创建配置。
 
-        Environment variables:
-        - AI_BENCHMARK_MODEL: Model name
-        - AI_BENCHMARK_PROVIDER: Model provider
-        - OPENAI_API_KEY: OpenAI API key
-        - ANTHROPIC_API_KEY: Anthropic API key
+        环境变量:
+        - AI_BENCHMARK_MODEL: 模型名称
+        - AI_BENCHMARK_PROVIDER: 模型提供商
+        - OPENAI_API_KEY: OpenAI API密钥
+        - ANTHROPIC_API_KEY: Anthropic API密钥
 
-        Returns:
-            BenchmarkConfig instance
+        返回:
+            BenchmarkConfig实例
         """
         model_name = os.environ.get("AI_BENCHMARK_MODEL", "gpt-4")
         provider = os.environ.get("AI_BENCHMARK_PROVIDER", "openai")
@@ -150,10 +149,10 @@ class BenchmarkConfig(BaseModel):
 
     def to_yaml(self, path: str) -> None:
         """
-        Save configuration to YAML file.
+        保存配置到YAML文件。
 
-        Args:
-            path: Output path
+        参数:
+            path: 输出路径
         """
         config_dict = self.model_dump()
 
@@ -162,13 +161,13 @@ class BenchmarkConfig(BaseModel):
 
     def is_phase_enabled(self, phase: str) -> bool:
         """
-        Check if a phase is enabled.
+        检查阶段是否启用。
 
-        Args:
-            phase: Phase name (foundation, dialogue, migration, safety, performance)
+        参数:
+            phase: 阶段名称 (foundation, dialogue, migration, safety, performance)
 
-        Returns:
-            True if phase is enabled
+        返回:
+            如果阶段启用则返回True
         """
         phase_config = getattr(self, phase, None)
         if phase_config is None:
@@ -177,13 +176,13 @@ class BenchmarkConfig(BaseModel):
 
     def get_thresholds(self, phase: str) -> ThresholdConfig:
         """
-        Get thresholds for a specific phase.
+        获取特定阶段的阈值。
 
-        Args:
-            phase: Phase name
+        参数:
+            phase: 阶段名称
 
-        Returns:
-            ThresholdConfig for the phase
+        返回:
+            该阶段的ThresholdConfig
         """
         phase_config = getattr(self, phase, None)
         if phase_config is None:
@@ -193,42 +192,42 @@ class BenchmarkConfig(BaseModel):
 
 class ConfigLoader:
     """
-    Utility class for loading configurations from various sources.
+    从各种来源加载配置的工具类。
     """
 
     @staticmethod
     def load(path: Optional[str] = None, env: bool = True) -> BenchmarkConfig:
         """
-        Load configuration from file or environment.
+        从文件或环境加载配置。
 
-        Priority:
-        1. Explicit file path
-        2. Environment variables
-        3. Default configuration
+        优先级:
+        1. 明确的文件路径
+        2. 环境变量
+        3. 默认配置
 
-        Args:
-            path: Optional path to configuration file
-            env: Whether to load from environment if no file provided
+        参数:
+            path: 配置文件路径(可选)
+            env: 如果没有提供文件是否从环境加载
 
-        Returns:
-            BenchmarkConfig instance
+        返回:
+            BenchmarkConfig实例
         """
         if path:
             return BenchmarkConfig.from_yaml(path)
 
         if env:
-            # Check for config file path in environment
+            # 检查环境中的配置文件路径
             config_path = os.environ.get("AI_BENCHMARK_CONFIG")
             if config_path:
                 return BenchmarkConfig.from_yaml(config_path)
 
-            # Try to load from environment variables
+            # 尝试从环境变量加载
             try:
                 return BenchmarkConfig.from_env()
             except Exception:
                 pass
 
-        # Return default configuration
+        # 返回默认配置
         return BenchmarkConfig(
             model=ModelConfig(name="gpt-4", provider="openai")
         )

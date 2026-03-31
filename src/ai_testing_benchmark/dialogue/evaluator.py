@@ -1,5 +1,5 @@
 """
-Dialogue system evaluation module.
+对话系统评估模块。
 """
 
 from typing import Dict, List, Any, Optional
@@ -11,10 +11,9 @@ from ai_testing_benchmark.core.result import PhaseResult, ResultStatus
 
 class DialogueEvaluator(BaseEvaluator):
     """
-    Evaluator for conversational AI capabilities.
+    对话式AI能力的评估器。
 
-    Tests intent recognition, entity extraction, dialogue flow,
-    response quality, and user journey completion.
+    测试意图识别、实体提取、对话流程、响应质量和用户旅程完成度。
     """
 
     def __init__(
@@ -27,13 +26,13 @@ class DialogueEvaluator(BaseEvaluator):
         super().__init__(model_name, provider, config, verbose)
 
     def evaluate_single(self, test_case: Dict) -> EvaluationResult:
-        """Evaluate a single dialogue test case."""
+        """评估单个对话测试用例。"""
         start_time = time.time()
 
         category = test_case.get("category", "dialogue")
         test_id = test_case.get("id", "unknown")
 
-        self.logger.info(f"Evaluating {test_id} ({category})")
+        self.logger.info(f"正在评估 {test_id} ({category})")
 
         if category == "intent_recognition":
             result = self._evaluate_intent_recognition(test_case)
@@ -61,22 +60,22 @@ class DialogueEvaluator(BaseEvaluator):
         )
 
     def _evaluate_intent_recognition(self, test_case: Dict) -> Dict:
-        """Evaluate intent recognition accuracy."""
+        """评估意图识别准确率。"""
         response = self._call_model(test_case.get("user_utterance", ""))
 
         expected_intent = test_case.get("expected_intent", "")
         predicted_intent = response.get("intent", "")
 
-        # Exact match
+        # 精确匹配
         if predicted_intent.lower() == expected_intent.lower():
             intent_score = 1.0
         else:
-            # Partial match for similar intents
+            # 类似意图的部分匹配
             intent_score = 0.5
 
         confidence = response.get("confidence", 0.5)
 
-        # Confidence calibration check
+        # 置信度校准检查
         if abs(confidence - intent_score) < 0.2:
             calibration_score = 1.0
         else:
@@ -99,13 +98,13 @@ class DialogueEvaluator(BaseEvaluator):
         }
 
     def _evaluate_entity_extraction(self, test_case: Dict) -> Dict:
-        """Evaluate entity extraction from user utterances."""
+        """评估从用户话语中提取实体。"""
         response = self._call_model(test_case.get("user_utterance", ""))
 
         expected_entities = test_case.get("expected_entities", [])
         predicted_entities = response.get("entities", [])
 
-        # Calculate entity-level metrics
+        # 计算实体级指标
         true_positives = 0
         for exp_ent in expected_entities:
             for pred_ent in predicted_entities:
@@ -133,7 +132,7 @@ class DialogueEvaluator(BaseEvaluator):
         }
 
     def _evaluate_dialogue_flow(self, test_case: Dict) -> Dict:
-        """Evaluate multi-turn dialogue flow."""
+        """评估多轮对话流程。"""
         conversation = test_case.get("conversation", [])
 
         scores = []
@@ -159,15 +158,15 @@ class DialogueEvaluator(BaseEvaluator):
         }
 
     def _evaluate_response_quality(self, test_case: Dict) -> Dict:
-        """Evaluate response quality metrics."""
+        """评估响应质量指标。"""
         response = self._call_model(test_case.get("user_input", ""))
 
         response_text = response.get("text", "")
 
-        # Basic quality metrics
-        relevance = 0.8  # Mock
-        coherence = 0.85  # Mock
-        fluency = 0.9  # Mock
+        # 基本质量指标
+        relevance = 0.8  # 模拟
+        coherence = 0.85  # 模拟
+        fluency = 0.9  # 模拟
 
         overall_score = (relevance + coherence + fluency) / 3
 
@@ -185,7 +184,7 @@ class DialogueEvaluator(BaseEvaluator):
         }
 
     def _evaluate_user_journey(self, test_case: Dict) -> Dict:
-        """Evaluate complete user journey completion."""
+        """评估完整用户旅程完成度。"""
         journey = test_case.get("journey", {})
         steps = journey.get("steps", [])
 
@@ -206,7 +205,7 @@ class DialogueEvaluator(BaseEvaluator):
 
         completion_rate = completed_steps / len(steps) if steps else 0
 
-        # Check critical path completion
+        # 检查关键路径完成度
         critical_path = journey.get("critical_path", [])
         critical_completed = all(
             step_scores[i] == 1.0 for i in critical_path if i < len(step_scores)
@@ -229,7 +228,7 @@ class DialogueEvaluator(BaseEvaluator):
         }
 
     def _evaluate_generic_dialogue(self, test_case: Dict) -> Dict:
-        """Generic dialogue evaluation."""
+        """通用对话评估。"""
         return {
             "passed": False,
             "score": 0.0,
@@ -238,11 +237,11 @@ class DialogueEvaluator(BaseEvaluator):
         }
 
     def _call_model(self, prompt: str) -> Dict:
-        """Call the model - placeholder for actual implementation."""
-        return {"intent": "greeting", "confidence": 0.9, "text": "Hello"}
+        """调用模型 - 占位符，需实现实际调用。"""
+        return {"intent": "greeting", "confidence": 0.9, "text": "你好"}
 
     def calculate_overall_score(self, results: List[EvaluationResult]) -> Dict:
-        """Calculate aggregated dialogue scores."""
+        """计算聚合对话分数。"""
         if not results:
             return {"overall_score": 0.0, "category_scores": {}}
 
@@ -268,12 +267,12 @@ class DialogueEvaluator(BaseEvaluator):
         }
 
     def run_phase(self) -> PhaseResult:
-        """Run complete dialogue evaluation phase."""
+        """运行完整对话评估阶段。"""
         phase_result = PhaseResult(phase="dialogue")
 
         test_cases = self._load_test_cases()
 
-        self.logger.info(f"Running {len(test_cases)} dialogue tests")
+        self.logger.info(f"正在运行 {len(test_cases)} 个对话测试")
 
         for test_case in test_cases:
             result = self.evaluate_single(test_case)
@@ -286,13 +285,13 @@ class DialogueEvaluator(BaseEvaluator):
         return phase_result
 
     def _load_test_cases(self) -> List[Dict]:
-        """Load dialogue test cases."""
+        """加载对话测试用例。"""
         return [
             {
                 "id": "TC-DIAL-001",
                 "category": "intent_recognition",
                 "scenario_id": "greeting",
-                "user_utterance": "Hi, I need help with my cloud migration",
+                "user_utterance": "你好，我想咨询云迁移的问题",
                 "expected_intent": "greeting",
                 "pass_threshold": 0.85
             },
@@ -300,10 +299,10 @@ class DialogueEvaluator(BaseEvaluator):
                 "id": "TC-DIAL-002",
                 "category": "entity_extraction",
                 "scenario_id": "resource_query",
-                "user_utterance": "Show me the status of my 50 EC2 instances in us-east-1",
+                "user_utterance": "显示我在us-east-1区域的50台EC2实例状态",
                 "expected_entities": [
                     {"type": "COUNT", "value": "50"},
-                    {"type": "RESOURCE", "value": "EC2 instances"},
+                    {"type": "RESOURCE", "value": "EC2实例"},
                     {"type": "REGION", "value": "us-east-1"}
                 ],
                 "pass_threshold": 0.85
@@ -313,23 +312,23 @@ class DialogueEvaluator(BaseEvaluator):
                 "category": "journey",
                 "scenario_id": "migration_assessment",
                 "journey": {
-                    "name": "Migration Assessment",
+                    "name": "迁移评估",
                     "critical_path": [0, 1, 2],
                     "steps": [
                         {
-                            "action": "Start assessment",
+                            "action": "开始评估",
                             "expected_outcome": "assessment_started"
                         },
                         {
-                            "action": "Provide infrastructure info",
+                            "action": "提供基础设施信息",
                             "expected_outcome": "infrastructure_analyzed"
                         },
                         {
-                            "action": "Request risk assessment",
+                            "action": "请求风险评估",
                             "expected_outcome": "risks_identified"
                         },
                         {
-                            "action": "Get recommendations",
+                            "action": "获取建议",
                             "expected_outcome": "recommendations_provided"
                         }
                     ]

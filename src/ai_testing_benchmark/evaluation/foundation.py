@@ -1,5 +1,5 @@
 """
-Foundation model evaluation module.
+基础模型评估模块。
 """
 
 from typing import Dict, List, Any, Optional
@@ -14,10 +14,9 @@ from ai_testing_benchmark.evaluation.benchmarks import StandardBenchmarks
 
 class FoundationModelEvaluator(BaseEvaluator):
     """
-    Evaluator for foundation model capabilities.
+    基础模型能力的评估器。
 
-    Tests language understanding, reasoning, and generation capabilities
-    using standardized benchmarks and custom test cases.
+    使用标准化基准测试和自定义测试用例测试语言理解、推理和生成能力。
     """
 
     def __init__(
@@ -32,15 +31,15 @@ class FoundationModelEvaluator(BaseEvaluator):
         self.metrics_calc = MetricsCalculator()
 
     def evaluate_single(self, test_case: Dict) -> EvaluationResult:
-        """Evaluate a single foundation model test case."""
+        """评估单个基础模型测试用例。"""
         start_time = time.time()
 
         category = test_case.get("category", "unknown")
         test_id = test_case.get("id", "unknown")
 
-        self.logger.info(f"Evaluating {test_id} ({category})")
+        self.logger.info(f"正在评估 {test_id} ({category})")
 
-        # Generate response based on category
+        # 根据类别生成响应
         if category == "language_understanding":
             result = self._evaluate_language_understanding(test_case)
         elif category == "reasoning":
@@ -58,14 +57,14 @@ class FoundationModelEvaluator(BaseEvaluator):
             scenario_id=test_case.get("scenario_id", test_id),
             test_case_id=test_id,
             passed=result["passed"],
-            score=result["score"] * 100,  # Convert to 0-100 scale
+            score=result["score"] * 100,  # 转换为0-100 scale
             metrics=result["metrics"],
             details=result.get("details", {}),
             execution_time_ms=execution_time
         )
 
     def _evaluate_language_understanding(self, test_case: Dict) -> Dict:
-        """Evaluate language understanding tasks."""
+        """评估语言理解任务。"""
         task_type = test_case.get("task_type", "classification")
 
         if task_type == "classification":
@@ -78,14 +77,14 @@ class FoundationModelEvaluator(BaseEvaluator):
             return self._evaluate_generic(test_case)
 
     def _evaluate_classification(self, test_case: Dict) -> Dict:
-        """Evaluate text classification."""
-        # For demonstration - in production this would call the actual model
+        """评估文本分类。"""
+        # 示例中调用实际模型，生产环境需替换
         response = self._call_model(test_case.get("input", ""))
 
         expected = test_case.get("expected_category", "")
         metrics = {"accuracy": 0.0, "f1": 0.0}
 
-        # Simple mock scoring - replace with actual evaluation
+        # 简单的模拟评分 - 需替换为实际评估
         predicted = response.get("classification", "").lower()
         expected_lower = expected.lower()
 
@@ -94,7 +93,7 @@ class FoundationModelEvaluator(BaseEvaluator):
             metrics["f1"] = 1.0
             score = 1.0
         else:
-            # Partial credit for similar categories
+            # 类似类别的部分信用
             if any(word in predicted for word in expected_lower.split()):
                 score = 0.5
                 metrics["accuracy"] = 0.5
@@ -114,13 +113,13 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def _evaluate_ner(self, test_case: Dict) -> Dict:
-        """Evaluate named entity recognition."""
+        """评估命名实体识别。"""
         response = self._call_model(test_case.get("input", ""))
 
         expected_entities = test_case.get("expected_entities", [])
         predicted_entities = response.get("entities", [])
 
-        # Calculate entity-level metrics
+        # 计算实体级指标
         true_positives = len(set(
             (e["type"], e["value"]) for e in expected_entities
         ) & set(
@@ -147,7 +146,7 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def _evaluate_sentiment(self, test_case: Dict) -> Dict:
-        """Evaluate sentiment analysis."""
+        """评估情感分析。"""
         response = self._call_model(test_case.get("input", ""))
 
         expected_sentiment = test_case.get("expected_sentiment", "").lower()
@@ -167,7 +166,7 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def _evaluate_reasoning(self, test_case: Dict) -> Dict:
-        """Evaluate reasoning tasks."""
+        """评估推理任务。"""
         task_type = test_case.get("task_type", "mathematical")
 
         if task_type == "mathematical":
@@ -180,13 +179,13 @@ class FoundationModelEvaluator(BaseEvaluator):
             return self._evaluate_generic(test_case)
 
     def _evaluate_math_reasoning(self, test_case: Dict) -> Dict:
-        """Evaluate mathematical reasoning."""
+        """评估数学推理。"""
         response = self._call_model(test_case.get("problem", ""))
 
         expected_answer = test_case.get("expected_answers", {})
         predicted_answer = response.get("answer", {})
 
-        # Check final answer accuracy
+        # 检查最终答案准确性
         answer_score = 0.0
         step_score = 0.0
 
@@ -202,12 +201,11 @@ class FoundationModelEvaluator(BaseEvaluator):
                 else:
                     answer_score = 0.0
 
-        # Check reasoning steps
+        # 检查推理步骤
         expected_steps = expected_answer.get("steps", [])
         predicted_steps = response.get("steps", [])
 
         if expected_steps and predicted_steps:
-            # Simple step comparison
             matching_steps = sum(
                 1 for ep, pp in zip(expected_steps, predicted_steps)
                 if any(word in pp.lower() for word in ep.lower().split()[:3])
@@ -232,19 +230,19 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def _evaluate_logical_reasoning(self, test_case: Dict) -> Dict:
-        """Evaluate logical deduction."""
+        """评估逻辑推理。"""
         response = self._call_model(test_case.get("scenario", ""))
 
         expected_order = test_case.get("expected_answers", {}).get("migration_order", [])
         predicted_order = response.get("migration_order", [])
 
-        # Check if order respects dependencies
+        # 检查顺序是否满足依赖关系
         dependency_satisfied = self._check_dependency_satisfaction(
             predicted_order,
             test_case.get("dependencies", [])
         )
 
-        # Exact match score
+        # 精确匹配分数
         exact_match = sum(
             1 for e, p in zip(expected_order, predicted_order) if e == p
         ) / max(len(expected_order), 1)
@@ -270,7 +268,7 @@ class FoundationModelEvaluator(BaseEvaluator):
         order: List[str],
         dependencies: List[tuple]
     ) -> float:
-        """Check if migration order satisfies dependencies."""
+        """检查迁移顺序是否满足依赖关系。"""
         if not dependencies:
             return 1.0
 
@@ -282,18 +280,18 @@ class FoundationModelEvaluator(BaseEvaluator):
                 if position[dep_from] < position[dep_to]:
                     satisfied += 1
                 else:
-                    return 0.0  # Critical failure
+                    return 0.0  # 关键失败
 
         return satisfied / len(dependencies) if dependencies else 1.0
 
     def _evaluate_common_sense(self, test_case: Dict) -> Dict:
-        """Evaluate common sense reasoning."""
+        """评估常识推理。"""
         response = self._call_model(test_case.get("question", ""))
 
         expected = test_case.get("expected_answer", "").lower()
         predicted = response.get("answer", "").lower()
 
-        # Word overlap scoring
+        # 词汇重叠评分
         expected_words = set(expected.split())
         predicted_words = set(predicted.split())
 
@@ -311,13 +309,13 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def _evaluate_generation(self, test_case: Dict) -> Dict:
-        """Evaluate text generation capabilities."""
+        """评估文本生成能力。"""
         response = self._call_model(test_case.get("requirement", test_case.get("prompt", "")))
 
         generated_text = response.get("text", "")
         expected_components = test_case.get("expected_components", [])
 
-        # Component coverage
+        # 组件覆盖率
         if expected_components:
             covered = sum(
                 1 for comp in expected_components
@@ -327,7 +325,7 @@ class FoundationModelEvaluator(BaseEvaluator):
         else:
             coverage = 0.5
 
-        # Syntax validity (mock - would need actual validation)
+        # 语法有效性(模拟 - 需要实际验证)
         syntax_valid = test_case.get("validation_checks", ["syntax_valid"])[0] == "syntax_valid"
 
         score = 0.6 * coverage + 0.4 * (1.0 if syntax_valid else 0.5)
@@ -346,13 +344,13 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def _evaluate_knowledge(self, test_case: Dict) -> Dict:
-        """Evaluate domain knowledge."""
+        """评估领域知识。"""
         response = self._call_model(test_case.get("question", ""))
 
         expected = test_case.get("expected_answer", "")
         predicted = response.get("answer", "")
 
-        # Fact overlap scoring
+        # 事实重叠评分
         if expected and predicted:
             expected_facts = set(expected.lower().split())
             predicted_facts = set(predicted.lower().split())
@@ -368,7 +366,7 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def _evaluate_generic(self, test_case: Dict) -> Dict:
-        """Generic evaluation fallback."""
+        """通用评估后备方案。"""
         return {
             "passed": False,
             "score": 0.0,
@@ -378,15 +376,14 @@ class FoundationModelEvaluator(BaseEvaluator):
 
     def _call_model(self, prompt: str) -> Dict:
         """
-        Call the model with a prompt.
+        使用提示词调用模型。
 
-        In production, this would use the actual model API.
-        For now, returns mock responses.
+        生产环境中需集成实际模型API。
+        此处为模拟响应。
         """
-        # This is a placeholder - in production, integrate with actual model
-        self.logger.debug(f"Calling model with prompt: {prompt[:100]}...")
+        self.logger.debug(f"使用提示词调用模型: {prompt[:100]}...")
 
-        # Mock response based on input
+        # 模拟响应
         return {
             "classification": "iaas",
             "answer": "The answer",
@@ -395,11 +392,11 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def calculate_overall_score(self, results: List[EvaluationResult]) -> Dict:
-        """Calculate aggregated scores across all test cases."""
+        """计算所有测试用例的聚合分数。"""
         if not results:
             return {"overall_score": 0.0, "category_scores": {}}
 
-        # Group by category
+        # 按类别分组
         by_category: Dict[str, List] = {}
         for result in results:
             cat = result.details.get("task_type", "unknown")
@@ -407,13 +404,13 @@ class FoundationModelEvaluator(BaseEvaluator):
                 by_category[cat] = []
             by_category[cat].append(result)
 
-        # Calculate category scores
+        # 计算类别分数
         category_scores = {}
         for cat, cat_results in by_category.items():
             scores = [r.score for r in cat_results]
             category_scores[cat] = sum(scores) / len(scores) if scores else 0
 
-        # Overall score is weighted average
+        # 总体分数为加权平均
         weights = {
             "classification": 0.25,
             "ner": 0.15,
@@ -438,18 +435,18 @@ class FoundationModelEvaluator(BaseEvaluator):
         }
 
     def run_phase(self) -> PhaseResult:
-        """Run the complete foundation evaluation phase."""
+        """运行完整的基础评估阶段。"""
         phase_result = PhaseResult(phase="foundation")
 
         test_cases = self._load_test_cases()
 
-        self.logger.info(f"Running {len(test_cases)} foundation model tests")
+        self.logger.info(f"正在运行 {len(test_cases)} 个基础模型测试")
 
         for test_case in test_cases:
             result = self.evaluate_single(test_case)
             phase_result.add_result(result)
 
-        # Calculate phase score
+        # 计算阶段分数
         if phase_result.results:
             scores = [r.score for r in phase_result.results]
             phase_result.overall_score = sum(scores) / len(scores)
@@ -457,14 +454,14 @@ class FoundationModelEvaluator(BaseEvaluator):
         return phase_result
 
     def _load_test_cases(self) -> List[Dict]:
-        """Load test cases for foundation evaluation."""
-        # Return sample test cases - in production, load from files/database
+        """加载基础评估测试用例。"""
+        # 返回示例测试用例 - 生产环境从文件/数据库加载
         return [
             {
                 "id": "TC-FU-001",
                 "category": "language_understanding",
                 "task_type": "classification",
-                "description": "Infrastructure type classification",
+                "description": "基础设施类型分类",
                 "input": "We have 50 virtual machines running Ubuntu with manual scaling.",
                 "expected_category": "IaaS",
                 "pass_threshold": 0.85
@@ -473,7 +470,7 @@ class FoundationModelEvaluator(BaseEvaluator):
                 "id": "TC-FU-002",
                 "category": "language_understanding",
                 "task_type": "ner",
-                "description": "Cloud resource entity extraction",
+                "description": "云资源实体提取",
                 "input": "Three m5.large EC2 instances in us-east-1 running Ubuntu 22.04.",
                 "expected_entities": [
                     {"type": "RESOURCE_TYPE", "value": "EC2 instances"},
@@ -486,7 +483,7 @@ class FoundationModelEvaluator(BaseEvaluator):
                 "id": "TC-RE-001",
                 "category": "reasoning",
                 "task_type": "mathematical",
-                "description": "Cloud cost calculation",
+                "description": "云成本计算",
                 "problem": "Calculate annual cost for 50 t3.medium instances at $0.0416/hour.",
                 "expected_answers": {
                     "final_answer": 18226.80,

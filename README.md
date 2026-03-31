@@ -1,136 +1,135 @@
 # AI-Testing-Benchmark
 
-A comprehensive, engineering-grade evaluation framework for AI-guided cloud migration journey systems.
+面向AI引导云迁移旅程系统的综合工程级评估框架。
 
-## Overview
+## 概述
 
-AI-Testing-Benchmark provides a systematic approach to evaluating AI systems that guide users through cloud migration journeys. It covers foundation model capabilities, conversational AI quality, migration-specific AI abilities, safety & alignment, and performance metrics.
+AI-Testing-Benchmark 提供了一套系统化的方法，用于评估引导用户完成云迁移旅程的AI系统。涵盖基础模型能力、对话式AI质量、迁移专项AI能力、安全与对齐以及性能指标等五大评估维度。
 
-## Architecture
+## 架构
 
 ```
 AI-Testing-Benchmark/
-├── src/ai_testing_benchmark/     # Core evaluation framework
-│   ├── core/                      # Base classes and interfaces
-│   ├── evaluation/                # Foundation model evaluation
-│   ├── dialogue/                  # Conversational AI evaluation
-│   ├── migration/                 # Cloud migration specific tests
-│   ├── safety/                    # Safety and alignment tests
-│   └── performance/                # Performance benchmarking
-├── tests/                         # Test suites
-├── examples/                      # Usage examples
-├── tools/                         # Tool integrations
-├── docs/                          # Documentation
-└── data/                          # Sample datasets
+├── src/ai_testing_benchmark/     # 核心评估框架
+│   ├── core/                      # 基础类和接口
+│   ├── evaluation/                # 基础模型评估
+│   ├── dialogue/                  # 对话式AI评估
+│   ├── migration/                 # 云迁移专项测试
+│   ├── safety/                   # 安全与对齐测试
+│   └── performance/               # 性能基准测试
+├── tests/                         # 测试套件
+├── examples/                      # 使用示例
+├── docs/                          # 详细文档
+└── data/                          # 样本数据集
 ```
 
-## Installation
+## 安装
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/AI-Testing-Benchmark.git
+# 克隆仓库
+git clone https://github.com/Mageric0412/AI-Testing-Benchmark.git
 cd AI-Testing-Benchmark
 
-# Install dependencies
+# 安装依赖
 pip install -r requirements.txt
 
-# Install in development mode
+# 开发模式安装
 pip install -e .
 ```
 
-## Quick Start
+## 快速开始
 
 ```python
 from ai_testing_benchmark import BenchmarkRunner
 from ai_testing_benchmark.evaluation import FoundationModelEvaluator
 from ai_testing_benchmark.migration import CloudMigrationJourneyEvaluator
 
-# Run foundation model evaluation
+# 运行基础模型评估
 runner = BenchmarkRunner()
 results = runner.run_foundation_evaluation(
     model="gpt-4",
     benchmarks=["mmlu", "gsm8k", "truthfulqa"]
 )
 
-# Run cloud migration journey evaluation
+# 运行云迁移旅程评估
 migration_evaluator = CloudMigrationJourneyEvaluator()
 journey_results = migration_evaluator.evaluate_phase("assessment", user_input={
-    "infrastructure_description": "100 VMs, 5 databases"
+    "infrastructure_description": "100台虚拟机, 5个数据库"
 })
 ```
 
-## Five-Layer Evaluation Framework
+## 五层评估框架
 
-### Layer 1: Foundation Model Capabilities
-- Language Understanding (Classification, NER, Sentiment)
-- Reasoning (Mathematical, Logical, Common Sense)
-- Generation (Text, Code, Creative)
-- Knowledge Application
+### 第一层：基础模型能力
+- 语言理解（分类、实体识别、情感分析）
+- 推理能力（数学推理、逻辑推理、常识推理）
+- 生成能力（文本、代码、创意写作）
+- 知识应用
 
-### Layer 2: Conversational AI Evaluation
-- Intent Recognition Accuracy
-- Entity Extraction F1
-- Dialogue Flow Quality
-- Response Latency & Naturalness
+### 第二层：对话式AI评估
+- 意图识别准确率
+- 实体提取F1分数
+- 对话流程质量
+- 响应延迟与自然度
 
-### Layer 3: Cloud Migration AI Evaluation
-- **Assessment Phase**: Infrastructure discovery, risk identification
-- **Planning Phase**: Sequencing optimization, strategy recommendation
-- **Execution Phase**: Automated migration, rollback capability
-- **Validation Phase**: Pre/post comparison, anomaly detection
+### 第三层：云迁移AI评估
+- **评估阶段**：基础设施发现、风险识别
+- **规划阶段**：顺序优化、策略推荐
+- **执行阶段**：自动化迁移、回滚能力
+- **验证阶段**：前后对比、异常检测
 
-### Layer 4: Safety & Alignment
-- Prompt Injection Resistance
-- Jailbreak Resistance
-- Bias Detection (Demographic parity, Stereotypes)
-- Hallucination Prevention
+### 第四层：安全与对齐
+- 提示注入抵抗
+- 越狱攻击抵抗
+- 偏见检测（人口统计平等、刻板印象）
+- 幻觉预防
 
-### Layer 5: Performance Metrics
-- Latency (P50, P95, P99)
-- Throughput (Tokens/second)
-- Cost Efficiency
-- Scalability
+### 第五层：性能指标
+- 延迟（P50、P95、P99）
+- 吞吐量（Tokens/秒）
+- 成本效率
+- 可扩展性
 
-## Documentation
+## 文档
 
-Detailed documentation is available in the [docs](./docs/) directory:
+详细文档位于 [docs](./docs/) 目录：
 
-- [Evaluation Framework Guide](./docs/EVALUATION_FRAMEWORK.md)
-- [Cloud Migration Test Suite](./docs/CLOUD_MIGRATION_TESTS.md)
-- [Tool Integration Guide](./docs/TOOL_INTEGRATIONS.md)
-- [API Reference](./docs/API_REFERENCE.md)
-- [Test Case Catalog](./docs/TEST_CASE_CATALOG.md)
+- [评估框架指南](./docs/EVALUATION_FRAMEWORK.md)
+- [云迁移测试套件](./docs/CLOUD_MIGRATION_TESTS.md)
+- [工具集成指南](./docs/TOOL_INTEGRATIONS.md)
+- [API参考](./docs/API_REFERENCE.md)
+- [测试用例目录](./docs/TEST_CASE_CATALOG.md)
 
-## Supported Tools
+## 支持的工具
 
-| Category | Tools |
-|----------|-------|
-| LLM Evaluation | LangTest, LM Evaluation Harness |
-| RAG Assessment | RAGAS, Trulens |
-| Fairness | AIF360, Fairlearn |
-| Content Moderation | Perspective API, OpenAI Moderation |
-| Benchmarking | Custom Framework, Prometheus |
+| 类别 | 工具 |
+|------|------|
+| LLM评估 | LangTest, LM Evaluation Harness |
+| RAG评估 | RAGAS, Trulens |
+| 公平性 | AIF360, Fairlearn |
+| 内容审核 | Perspective API, OpenAI Moderation |
+| 基准测试 | 自定义框架, Prometheus |
 
-## Quality Gates
+## 质量门禁
 
-| Metric | Threshold |
-|--------|-----------|
-| Overall Score | >= 80/100 |
-| Critical Issues | = 0 |
-| High Issues | <= 3 |
-| Intent Accuracy | >= 85% |
-| Migration Success | >= 99% |
-| Safety Score | >= 90% |
+| 指标 | 阈值 |
+|------|------|
+| 总体评分 | >= 80/100 |
+| 严重问题数 | = 0 |
+| 高优先级问题数 | <= 3 |
+| 意图识别准确率 | >= 85% |
+| 迁移成功率 | >= 99% |
+| 安全评分 | >= 90% |
 
-## Contributing
+## 贡献
 
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+欢迎贡献！请在提交PR前阅读贡献指南。
 
-## License
+## 许可证
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT许可证 - 详见 [LICENSE](LICENSE)。
 
-## References
+## 参考资料
 
 - [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework)
 - [Stanford HELM](https://crfm.stanford.edu/helm/)

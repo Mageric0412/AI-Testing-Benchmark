@@ -1,5 +1,5 @@
 """
-Performance evaluation module.
+性能评估模块。
 """
 
 from typing import Dict, List, Any, Optional
@@ -12,13 +12,13 @@ from ai_testing_benchmark.core.result import PhaseResult, ResultStatus
 
 class PerformanceEvaluator(BaseEvaluator):
     """
-    Evaluator for AI system performance metrics.
+    AI系统性能指标的评估器。
 
-    Tests:
-    - Latency (P50, P95, P99)
-    - Throughput (tokens/second)
-    - Cost efficiency
-    - Scalability
+    测试:
+    - 延迟 (P50, P95, P99)
+    - 吞吐量 (Tokens/秒)
+    - 成本效率
+    - 可扩展性
     """
 
     def __init__(
@@ -31,13 +31,13 @@ class PerformanceEvaluator(BaseEvaluator):
         super().__init__(model_name, provider, config, verbose)
 
     def evaluate_single(self, test_case: Dict) -> EvaluationResult:
-        """Evaluate a single performance test case."""
+        """评估单个性能测试用例。"""
         start_time = time.time()
 
         category = test_case.get("category", "performance")
         test_id = test_case.get("id", "unknown")
 
-        self.logger.info(f"Evaluating {test_id} ({category})")
+        self.logger.info(f"正在评估 {test_id} ({category})")
 
         if category == "latency":
             result = self._evaluate_latency(test_case)
@@ -63,7 +63,7 @@ class PerformanceEvaluator(BaseEvaluator):
         )
 
     def _evaluate_latency(self, test_case: Dict) -> Dict:
-        """Evaluate response latency."""
+        """评估响应延迟。"""
         latencies = []
         num_requests = test_case.get("num_requests", 100)
 
@@ -71,7 +71,7 @@ class PerformanceEvaluator(BaseEvaluator):
             request_start = time.time()
             self._call_model(test_case.get("prompt", "test"))
             request_end = time.time()
-            latencies.append((request_end - request_start) * 1000)  # Convert to ms
+            latencies.append((request_end - request_start) * 1000)  # 转换为毫秒
 
         latencies = np.array(latencies)
 
@@ -83,7 +83,7 @@ class PerformanceEvaluator(BaseEvaluator):
         p95_threshold = thresholds.get("p95_ms", 500)
         p99_threshold = thresholds.get("p99_ms", 1000)
 
-        # Score based on threshold compliance
+        # 基于阈值合规性评分
         p95_pass = p95 <= p95_threshold
         p99_pass = p99 <= p99_threshold
 
@@ -105,7 +105,7 @@ class PerformanceEvaluator(BaseEvaluator):
         }
 
     def _evaluate_throughput(self, test_case: Dict) -> Dict:
-        """Evaluate throughput (tokens/second)."""
+        """评估吞吐量 (Tokens/秒)。"""
         total_tokens = 0
         total_time = 0
         num_requests = test_case.get("num_requests", 10)
@@ -139,7 +139,7 @@ class PerformanceEvaluator(BaseEvaluator):
         }
 
     def _evaluate_cost_efficiency(self, test_case: Dict) -> Dict:
-        """Evaluate cost efficiency."""
+        """评估成本效率。"""
         response = self._call_model(test_case.get("prompt", "test"))
 
         tokens_used = response.get("tokens", 100)
@@ -165,20 +165,20 @@ class PerformanceEvaluator(BaseEvaluator):
         }
 
     def _evaluate_scalability(self, test_case: Dict) -> Dict:
-        """Evaluate scalability under load."""
+        """评估负载下的可扩展性。"""
         concurrency_levels = test_case.get("concurrency_levels", [1, 5, 10, 50])
         results = []
 
         for concurrency in concurrency_levels:
             start = time.time()
-            # Simulate concurrent requests
+            # 模拟并发请求
             for _ in range(concurrency):
                 self._call_model(test_case.get("prompt", "test"))
             elapsed = time.time() - start
             throughput = concurrency / elapsed if elapsed > 0 else 0
             results.append({"concurrency": concurrency, "throughput": throughput})
 
-        # Check if throughput scales linearly
+        # 检查吞吐量是否线性扩展
         base_throughput = results[0]["throughput"] if results else 1
         scalability_scores = []
 
@@ -201,7 +201,7 @@ class PerformanceEvaluator(BaseEvaluator):
         }
 
     def _evaluate_generic_performance(self, test_case: Dict) -> Dict:
-        """Generic performance evaluation."""
+        """通用性能评估。"""
         return {
             "passed": False,
             "score": 0.0,
@@ -210,11 +210,11 @@ class PerformanceEvaluator(BaseEvaluator):
         }
 
     def _call_model(self, prompt: str) -> Dict:
-        """Call the model - placeholder."""
+        """调用模型 - 占位符。"""
         return {"tokens": 100, "latency_ms": 50}
 
     def calculate_overall_score(self, results: List[EvaluationResult]) -> Dict:
-        """Calculate aggregated performance scores."""
+        """计算聚合性能分数。"""
         if not results:
             return {"overall_score": 0.0, "category_scores": {}}
 
@@ -230,7 +230,7 @@ class PerformanceEvaluator(BaseEvaluator):
             for cat, scores in category_scores.items()
         }
 
-        # Weight latency more heavily
+        # 延迟权重更高
         weights = {"latency": 0.40, "throughput": 0.30, "cost": 0.15, "scalability": 0.15}
 
         overall = sum(
@@ -246,12 +246,12 @@ class PerformanceEvaluator(BaseEvaluator):
         }
 
     def run_phase(self) -> PhaseResult:
-        """Run complete performance evaluation phase."""
+        """运行完整性能评估阶段。"""
         phase_result = PhaseResult(phase="performance")
 
         test_cases = self._load_test_cases()
 
-        self.logger.info(f"Running {len(test_cases)} performance tests")
+        self.logger.info(f"正在运行 {len(test_cases)} 个性能测试")
 
         for test_case in test_cases:
             result = self.evaluate_single(test_case)
@@ -264,13 +264,13 @@ class PerformanceEvaluator(BaseEvaluator):
         return phase_result
 
     def _load_test_cases(self) -> List[Dict]:
-        """Load performance test cases."""
+        """加载性能测试用例。"""
         return [
             {
                 "id": "TC-PERF-001",
                 "category": "latency",
                 "scenario_id": "LAT-001",
-                "prompt": "What is cloud migration?",
+                "prompt": "什么是云迁移?",
                 "num_requests": 50,
                 "thresholds": {
                     "p95_ms": 500,
@@ -282,7 +282,7 @@ class PerformanceEvaluator(BaseEvaluator):
                 "id": "TC-PERF-002",
                 "category": "throughput",
                 "scenario_id": "THR-001",
-                "prompt": "Explain cloud migration strategies",
+                "prompt": "解释云迁移策略",
                 "num_requests": 20,
                 "min_throughput": 50,
                 "pass_threshold": 0.80
