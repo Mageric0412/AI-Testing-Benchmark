@@ -1,30 +1,29 @@
-# Cloud Migration AI Test Suite
+# 云迁移AI测试套件
 
-## Overview
+## 概述
 
-This document provides comprehensive test specifications for evaluating AI systems that guide users through cloud migration journeys. The tests are organized by migration phase and cover the complete lifecycle of a migration project.
+本文档为评估引导用户完成云迁移旅程的AI系统提供了全面的测试规范。测试按迁移阶段组织，涵盖迁移项目的完整生命周期。
 
 ---
 
-## Migration Journey Phases
+## 迁移旅程阶段
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│                      CLOUD MIGRATION JOURNEY                        │
+│                      云迁移旅程                                        │
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐         │
 │  │         │    │         │    │         │    │         │         │
-│  │ASSESS-  │───▶│ PLANNING │───▶│EXECUTION│───▶│VALIDA-  │         │
-│  │   MENT  │    │         │    │         │    │  TION   │         │
+│  │ 评估    │───▶│ 规划    │───▶│ 执行    │───▶│ 验证    │         │
 │  │         │    │         │    │         │    │         │         │
 │  └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘         │
 │       │              │              │              │               │
 │       ▼              ▼              ▼              ▼               │
 │  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐         │
-│  │Inventory│    │Sequence │    │Automated│    │Functional│         │
-│  │Risk ID  │    │Strategy │    │Migration│    │Performance│        │
-│  │Cost Est │    │Resource │    │Rollback │    │Security  │        │
+│  │资产清单 │    │排序     │    │自动化    │    │功能     │         │
+│  │风险识别 │    │策略     │    │迁移      │    │性能     │         │
+│  │成本估算 │    │资源     │    │回滚      │    │安全     │         │
 │  └─────────┘    └─────────┘    └─────────┘    └─────────┘         │
 │                                                                     │
 └────────────────────────────────────────────────────────────────────┘
@@ -32,40 +31,39 @@ This document provides comprehensive test specifications for evaluating AI syste
 
 ---
 
-## Phase 1: Assessment Tests
+## 第一阶段：评估测试
 
-### 1.1 Infrastructure Discovery
+### 1.1 基础设施发现
 
-**Objective**: Verify AI can accurately discover and catalog cloud infrastructure resources.
+**目标**：验证AI能够准确发现和编目云基础设施资源。
 
-#### TC-CM-ASSESS-001: Server Infrastructure Discovery
+#### TC-CM-ASSESS-001：服务器基础设施发现
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-ASSESS-001",
-    "phase": "Assessment",
+    "phase": "评估",
     "category": "infrastructure_discovery",
-    "name": "Server Infrastructure Discovery",
+    "name": "服务器基础设施发现",
     "description": """
-    Evaluates the AI's ability to discover, catalog, and report on
-    server infrastructure from user descriptions or data exports.
+    评估AI从用户描述或数据导出中发现、编目和报告服务器基础设施的能力。
     """,
     "difficulty": "medium",
     "test_scenarios": [
         {
             "scenario_id": "SS-001",
-            "scenario_name": "Medium Enterprise Setup",
+            "scenario_name": "中型企业设置",
             "input": {
                 "description": """
-                We have a typical mid-size e-commerce company:
-                - 2 data centers (primary in NYC, DR in Chicago)
-                - 100 physical servers (40 Windows, 60 Linux)
-                - 150 virtual machines managed by VMware
-                - 8 database servers (4 SQL Server, 2 MySQL, 2 PostgreSQL)
-                - 15 application servers running Java microservices
-                - 10 web servers with Apache and Nginx
-                - 5 load balancers (F5 BigIP)
-                - 20 switches, 10 routers
+                我们是一家典型的中型电子商务公司：
+                - 2个数据中心（纽约主站，芝加哥DR站）
+                - 100台物理服务器（40台Windows，60台Linux）
+                - 150台由VMware管理的虚拟机
+                - 8台数据库服务器（4台SQL Server，2台MySQL，2台PostgreSQL）
+                - 15台运行Java微服务的应用程序服务器
+                - 10台运行Apache和Nginx的Web服务器
+                - 5台负载均衡器（F5 BigIP）
+                - 20台交换机，10台路由器
                 """,
                 "data_export_available": False
             },
@@ -82,21 +80,21 @@ TEST_CASE = {
         },
         {
             "scenario_id": "SS-002",
-            "scenario_name": "Complex Microservices Architecture",
+            "scenario_name": "复杂微服务架构",
             "input": {
                 "description": """
-                Our platform runs on Kubernetes with:
-                - 3 clusters (prod, staging, dev)
-                - Each prod cluster: 50 nodes (mixed: 30 compute-optimized, 20 memory-optimized)
-                - Staging: 10 nodes
-                - Dev: 5 nodes
-                - 200 microservices across all environments
-                - Each microservice: 2-10 pods (average 4)
-                - Services: API Gateway, Auth Service, User Service, Product Service,
-                  Order Service, Payment Service, Notification Service, etc.
-                - Ingress controllers: 3 (one per cluster)
-                - Service mesh: Istio
-                - Container registry: Harbor
+                我们的平台运行在Kubernetes上：
+                - 3个集群（生产、预发布、开发）
+                - 每个生产集群：50个节点（混合：30个计算优化型，20个内存优化型）
+                - 预发布：10个节点
+                - 开发：5个节点
+                - 所有环境共200个微服务
+                - 每个微服务：2-10个Pod（平均4个）
+                - 服务：API网关、认证服务、用户服务、产品服务、
+                  订单服务、支付服务、通知服务等
+                - 入口控制器：3个（每个集群一个）
+                - 服务网格：Istio
+                - 容器注册表：Harbor
                 """,
                 "data_export_available": True,
                 "export_format": "kubectl get nodes -o json"
@@ -130,56 +128,55 @@ TEST_CASE = {
 }
 ```
 
-#### TC-CM-ASSESS-002: Dependency Mapping
+#### TC-CM-ASSESS-002：依赖映射
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-ASSESS-002",
-    "phase": "Assessment",
+    "phase": "评估",
     "category": "dependency_mapping",
-    "name": "Application Dependency Identification",
+    "name": "应用程序依赖识别",
     "description": """
-    Evaluates the AI's ability to identify and document dependencies
-    between applications, services, and infrastructure components.
+    评估AI识别和记录应用程序、服务和基础设施组件之间依赖关系的能力。
     """,
     "difficulty": "high",
     "test_scenarios": [
         {
             "scenario_id": "DM-001",
-            "scenario_name": "Three-Tier Web Application",
+            "scenario_name": "三层Web应用程序",
             "input": {
                 "description": """
-                Classic three-tier e-commerce architecture:
+                经典三层电子商务架构：
 
-                WEB TIER:
-                - Frontend: React SPA hosted on S3 + CloudFront
-                - CDN serving static assets
+                Web层：
+                - 前端：托管在S3 + CloudFront上的React SPA
+                - CDN提供静态资产
 
-                APPLICATION TIER:
-                - API Gateway: Kong API Gateway
-                - Product Service (Java Spring Boot) → port 8080
-                - Order Service (Python FastAPI) → port 8000
-                - User Service (Node.js Express) → port 3000
-                - Payment Service (Go) → port 9090
-                - Inventory Service (Rust) → port 8081
+                应用层：
+                - API网关：Kong API网关
+                - 产品服务（Java Spring Boot）→ 端口8080
+                - 订单服务（Python FastAPI）→ 端口8000
+                - 用户服务（Node.js Express）→ 端口3000
+                - 支付服务（Go）→ 端口9090
+                - 库存服务（Rust）→ 端口8081
 
-                DATA TIER:
-                - PostgreSQL: Products, Orders, Users (primary)
-                - Redis: Session cache, rate limiting
-                - Elasticsearch: Product search
-                - S3: Static assets, order documents
+                数据层：
+                - PostgreSQL：产品、订单、用户（主库）
+                - Redis：会话缓存、限流
+                - Elasticsearch：产品搜索
+                - S3：静态资产、订单文档
 
-                MESSAGE QUEUES:
-                - RabbitMQ: Async order processing
-                - Kafka: Event streaming for analytics
+                消息队列：
+                - RabbitMQ：异步订单处理
+                - Kafka：分析事件流
 
-                DEPENDENCIES:
-                - Frontend calls API Gateway
-                - API Gateway routes to services
-                - Services query PostgreSQL
-                - Order Service publishes to RabbitMQ
-                - Payment Service reads from RabbitMQ
-                - Product Service indexes to Elasticsearch
+                依赖关系：
+                - 前端调用API网关
+                - API网关路由到服务
+                - 服务查询PostgreSQL
+                - 订单服务发布到RabbitMQ
+                - 支付服务从RabbitMQ读取
+                - 产品服务索引到Elasticsearch
                 """,
                 "known_dependencies": 12,
                 "hidden_dependencies": 3
@@ -193,32 +190,32 @@ TEST_CASE = {
             "evaluation_metrics": {
                 "dependency_recall": {"threshold": 0.95},
                 "dependency_precision": {"threshold": 0.90},
-                "cycle_detection": {"threshold": 1.0}  # Must detect cycles if any
+                "cycle_detection": {"threshold": 1.0}  # 必须检测循环（如果有）
             }
         },
         {
             "scenario_id": "DM-002",
-            "scenario_name": "Microservices with Circuit Breakers",
+            "scenario_name": "带断路器的微服务",
             "input": {
                 "architecture_diagram": "see test_data/diagrams/microservices.pdf",
                 "description": """
-                Complex microservices with circuit breaker patterns:
+                带断路器模式的复杂微服务：
 
-                API Gateway → Auth → Rate Limiter → Service Mesh (Istio)
+                API网关 → 认证 → 限流 → 服务网格（Istio）
                     ↓
-                [Product Catalog] ←→ [Search Service]
+                [产品目录] ←→ [搜索服务]
                     ↓                    ↓
-                [Inventory]     ←→     [Cache]
+                [库存]     ←→     [缓存]
                     ↓
-                [Orders]  ──→  [Payments]
+                [订单]  ──→  [支付]
                     ↓
-                [Shipping] ←── [Notifications]
+                [配送] ←── [通知]
 
-                Each service has:
-                - Circuit breaker (Hystrix/Envoy)
-                - Retry policies
-                - Fallback mechanisms
-                - Health check endpoints
+                每个服务都有：
+                - 断路器（Hystrix/Envoy）
+                - 重试策略
+                - 回退机制
+                - 健康检查端点
                 """,
                 "expected_circuit_breaker_count": 8,
                 "expected_fallback_dependencies": 6
@@ -244,45 +241,44 @@ TEST_CASE = {
 }
 ```
 
-### 1.2 Risk Identification
+### 1.2 风险识别
 
-#### TC-CM-ASSESS-003: Risk Detection and Classification
+#### TC-CM-ASSESS-003：风险检测和分类
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-ASSESS-003",
-    "phase": "Assessment",
+    "phase": "评估",
     "category": "risk_identification",
-    "name": "Migration Risk Detection",
+    "name": "迁移风险检测",
     "description": """
-    Evaluates the AI's ability to identify, classify, and assess
-    risks associated with cloud migration scenarios.
+    评估AI识别、分类和评估与云迁移场景相关风险的能力。
     """,
     "difficulty": "high",
     "test_scenarios": [
         {
             "scenario_id": "RI-001",
-            "scenario_name": "Data Sovereignty Risk",
+            "scenario_name": "数据主权风险",
             "input": {
                 "description": """
-                Financial services company migrating to cloud:
+                金融服务业公司迁移到云：
 
-                INFRASTRUCTURE:
-                - Customer databases with PII (names, SSNs, financial data)
-                - Regulatory requirement: Data must remain in US region
-                - Current setup: Multi-region US data centers
-                - 15 PB of structured and unstructured data
-                - Real-time replication between sites
+                基础设施：
+                - 包含PII（姓名、SSN、财务数据）的客户数据库
+                - 监管要求：数据必须保留在美国区域
+                - 当前设置：美国多区域数据中心
+                - 15 PB结构化和非结构化数据
+                - 站点间实时复制
 
-                COMPLIANCE:
-                - SOX, PCI-DSS Level 1, GDPR (for EU customers)
-                - Data retention policies: 7 years
-                - Annual SOC 2 audits
+                合规性：
+                - SOX、PCI-DSS 1级、GDPR（针对欧盟客户）
+                - 数据保留策略：7年
+                - 年度SOC 2审计
 
-                STAKEHOLDER CONCERNS:
-                - CEO: "We cannot afford any data breach"
-                - Legal: "We need to maintain data sovereignty"
-                - CTO: "Cloud will save us 30% on infrastructure costs"
+                利益相关者关注：
+                - CEO："我们不能承受任何数据泄露"
+                - 法务："我们需要维护数据主权"
+                - CTO："云将为我们节省30%的基础设施成本"
                 """,
                 "known_risk_categories": [
                     "data_sovereignty",
@@ -295,27 +291,27 @@ TEST_CASE = {
             "expected_outputs": {
                 "risks_identified": {
                     "data_sovereignty": {
-                        "severity": "HIGH",
+                        "severity": "高",
                         "probability": 0.70,
-                        "impact": "HIGH",
+                        "impact": "高",
                         "detection_confidence": 0.95
                     },
                     "compliance_violation": {
-                        "severity": "CRITICAL",
+                        "severity": "严重",
                         "probability": 0.60,
-                        "impact": "CRITICAL",
+                        "impact": "严重",
                         "detection_confidence": 0.92
                     },
                     "security_breach": {
-                        "severity": "HIGH",
+                        "severity": "高",
                         "probability": 0.40,
-                        "impact": "CRITICAL",
+                        "impact": "严重",
                         "detection_confidence": 0.88
                     },
                     "cost_overrun": {
-                        "severity": "MEDIUM",
+                        "severity": "中",
                         "probability": 0.50,
-                        "impact": "MEDIUM",
+                        "impact": "中",
                         "detection_confidence": 0.85
                     }
                 },
@@ -325,30 +321,30 @@ TEST_CASE = {
         },
         {
             "scenario_id": "RI-002",
-            "scenario_name": "Legacy Application Dependencies",
+            "scenario_name": "遗留应用程序依赖",
             "input": {
                 "description": """
-                Manufacturing company with legacy systems:
+                拥有遗留系统的制造业公司：
 
-                LEGACY INFRASTRUCTURE:
-                - 30-year-old ERP system (AS/400, COBOL)
-                - Custom batch processing jobs running since 1995
-                - Integration via flat file exchanges
-                - No API layer, direct database connections
+                遗留基础设施：
+                - 30年历史的ERP系统（AS/400，COBOL）
+                - 自1995年以来运行的自定义批处理作业
+                - 通过平面文件交换集成
+                - 无API层，直接数据库连接
 
-                MODERN SYSTEMS:
+                现代系统：
                 - Salesforce CRM
                 - SAP S/4HANA
-                - Custom MES system
+                - 自定义MES系统
 
-                INTEGRATION CHALLENGES:
-                - AS/400 communicates via MQSeries
-                - File-based batch jobs run daily at 2 AM
-                - Some COBOL programs read from DB2
+                集成挑战：
+                - AS/400通过MQSeries通信
+                - 基于文件的批处理作业在凌晨2点运行
+                - 一些COBOL程序从DB2读取
 
-                TEAM CAPABILITIES:
-                - 5 COBOL developers (all >50 years old, retiring in 5 years)
-                - No documentation for 40% of legacy code
+                团队能力：
+                - 5名COBOL开发人员（ 모두 >50岁，5年内退休）
+                - 40%的遗留代码没有文档
                 """,
                 "known_risk_categories": [
                     "technical_debt",
@@ -359,18 +355,18 @@ TEST_CASE = {
             },
             "expected_outputs": {
                 "legacy_modern_integration_risk": {
-                    "severity": "HIGH",
+                    "severity": "高",
                     "detection_confidence": 0.93
                 },
                 "skill_gap_risk": {
-                    "severity": "MEDIUM",
+                    "severity": "中",
                     "detection_confidence": 0.88
                 },
                 "documentation_risk": {
-                    "severity": "HIGH",
+                    "severity": "高",
                     "detection_confidence": 0.85
                 },
-                "migration_strategy_impact": "Refactor or Re-platform recommended"
+                "migration_strategy_impact": "建议重构或重新平台化"
             }
         }
     ],
@@ -387,25 +383,24 @@ TEST_CASE = {
 }
 ```
 
-### 1.3 Cost Estimation
+### 1.3 成本估算
 
-#### TC-CM-ASSESS-004: Cloud Cost Estimation Accuracy
+#### TC-CM-ASSESS-004：云成本估算准确性
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-ASSESS-004",
-    "phase": "Assessment",
+    "phase": "评估",
     "category": "cost_estimation",
-    "name": "Migration Cost Estimation",
+    "name": "迁移成本估算",
     "description": """
-    Evaluates the AI's ability to estimate cloud migration costs
-    including infrastructure, migration, and operational expenses.
+    评估AI估算云迁移成本的能力，包括基础设施、迁移和运营费用。
     """,
     "difficulty": "high",
     "test_scenarios": [
         {
             "scenario_id": "CE-001",
-            "scenario_name": "Medium Enterprise AWS Migration",
+            "scenario_name": "中型企业AWS迁移",
             "input": {
                 "source_infrastructure": {
                     "servers": 100,
@@ -419,14 +414,14 @@ TEST_CASE = {
                     "utilization_avg": 0.45,
                     "storage_tb": 50
                 },
-                "current_monthly_cost": "$45,000 (on-premise)",
+                "current_monthly_cost": "$45,000 (本地)",
                 "migration_type": "lift_and_shift_initial",
                 "target_provider": "AWS",
                 "assumptions_provided": True
             },
             "expected_outputs": {
                 "monthly_aws_cost": {
-                    "expected_range": [32000, 45000],  # Based on AWS pricing
+                    "expected_range": [32000, 45000],  # 基于AWS定价
                     "tolerance": 0.15  # +/- 15%
                 },
                 "year_one_total": {
@@ -451,7 +446,7 @@ TEST_CASE = {
         },
         {
             "scenario_id": "CE-002",
-            "scenario_name": "Cost Comparison Multi-Provider",
+            "scenario_name": "多提供商成本比较",
             "input": {
                 "workload": {
                     "ec2_instances": 50,
@@ -486,39 +481,38 @@ TEST_CASE = {
 
 ---
 
-## Phase 2: Planning Tests
+## 第二阶段：规划测试
 
-### 2.1 Sequencing Optimization
+### 2.1 排序优化
 
-#### TC-CM-PLAN-001: Migration Order Optimization
+#### TC-CM-PLAN-001：迁移顺序优化
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-PLAN-001",
-    "phase": "Planning",
+    "phase": "规划",
     "category": "sequencing_optimization",
-    "name": "Migration Sequence Optimization",
+    "name": "迁移顺序优化",
     "description": """
-    Evaluates the AI's ability to determine optimal migration order
-    considering dependencies, risks, resources, and business constraints.
+    评估AI考虑依赖关系、风险、资源和业务约束来确定最佳迁移顺序的能力。
     """,
     "difficulty": "high",
     "test_scenarios": [
         {
             "scenario_id": "SEQ-001",
-            "scenario_name": "E-commerce Platform Migration",
+            "scenario_name": "电子商务平台迁移",
             "input": {
                 "applications": [
-                    {"id": "APP-001", "name": "User Auth Service", "dependencies": [], "risk": "LOW"},
-                    {"id": "APP-002", "name": "Product Catalog", "dependencies": [], "risk": "LOW"},
-                    {"id": "APP-003", "name": "Search Service", "dependencies": ["APP-002"], "risk": "MEDIUM"},
-                    {"id": "APP-004", "name": "Shopping Cart", "dependencies": ["APP-001", "APP-003"], "risk": "MEDIUM"},
-                    {"id": "APP-005", "name": "Order Processing", "dependencies": ["APP-001", "APP-004"], "risk": "HIGH"},
-                    {"id": "APP-006", "name": "Payment Service", "dependencies": ["APP-001"], "risk": "CRITICAL"},
-                    {"id": "APP-007", "name": "Inventory Management", "dependencies": ["APP-003"], "risk": "MEDIUM"},
-                    {"id": "APP-008", "name": "Shipping Integration", "dependencies": ["APP-005"], "risk": "LOW"},
-                    {"id": "APP-009", "name": "Email Service", "dependencies": [], "risk": "LOW"},
-                    {"id": "APP-010", "name": "Analytics Pipeline", "dependencies": ["APP-005", "APP-007"], "risk": "LOW"},
+                    {"id": "APP-001", "name": "用户认证服务", "dependencies": [], "risk": "低"},
+                    {"id": "APP-002", "name": "产品目录", "dependencies": [], "risk": "低"},
+                    {"id": "APP-003", "name": "搜索服务", "dependencies": ["APP-002"], "risk": "中"},
+                    {"id": "APP-004", "name": "购物车", "dependencies": ["APP-001", "APP-003"], "risk": "中"},
+                    {"id": "APP-005", "name": "订单处理", "dependencies": ["APP-001", "APP-004"], "risk": "高"},
+                    {"id": "APP-006", "name": "支付服务", "dependencies": ["APP-001"], "risk": "严重"},
+                    {"id": "APP-007", "name": "库存管理", "dependencies": ["APP-003"], "risk": "中"},
+                    {"id": "APP-008", "name": "配送集成", "dependencies": ["APP-005"], "risk": "低"},
+                    {"id": "APP-009", "name": "邮件服务", "dependencies": [], "risk": "低"},
+                    {"id": "APP-010", "name": "分析管道", "dependencies": ["APP-005", "APP-007"], "risk": "低"},
                 ],
                 "constraints": {
                     "max_concurrent_migrations": 2,
@@ -527,16 +521,16 @@ TEST_CASE = {
                     "must_complete_by": "2024-06-30"
                 },
                 "migration_strategies": {
-                    "APP-001": "Rehost",
-                    "APP-002": "Rehost",
-                    "APP-003": "Refactor",
-                    "APP-004": "Replatform",
-                    "APP-005": "Refactor",
-                    "APP-006": "Refactor",
-                    "APP-007": "Replatform",
-                    "APP-008": "Rehost",
-                    "APP-009": "Rehost",
-                    "APP-010": "Rehost"
+                    "APP-001": "重新托管",
+                    "APP-002": "重新托管",
+                    "APP-003": "重构",
+                    "APP-004": "重新平台化",
+                    "APP-005": "重构",
+                    "APP-006": "重构",
+                    "APP-007": "重新平台化",
+                    "APP-008": "重新托管",
+                    "APP-009": "重新托管",
+                    "APP-010": "重新托管"
                 }
             },
             "expected_outputs": {
@@ -562,15 +556,15 @@ TEST_CASE = {
         },
         {
             "scenario_id": "SEQ-002",
-            "scenario_name": "Database-First Migration Strategy",
+            "scenario_name": "数据库优先迁移策略",
             "input": {
                 "applications": [
-                    {"id": "DB-001", "name": "Customer DB (PostgreSQL)", "dependencies": [], "size_tb": 5},
-                    {"id": "DB-002", "name": "Order DB (MongoDB)", "dependencies": [], "size_tb": 2},
-                    {"id": "DB-003", "name": "Analytics DB (ClickHouse)", "dependencies": [], "size_tb": 10},
-                    {"id": "SVC-001", "name": "Customer API", "dependencies": ["DB-001"], "risk": "HIGH"},
-                    {"id": "SVC-002", "name": "Order Service", "dependencies": ["DB-002"], "risk": "HIGH"},
-                    {"id": "SVC-003", "name": "Analytics Service", "dependencies": ["DB-003"], "risk": "MEDIUM"},
+                    {"id": "DB-001", "name": "客户数据库（PostgreSQL）", "dependencies": [], "size_tb": 5},
+                    {"id": "DB-002", "name": "订单数据库（MongoDB）", "dependencies": [], "size_tb": 2},
+                    {"id": "DB-003", "name": "分析数据库（ClickHouse）", "dependencies": [], "size_tb": 10},
+                    {"id": "SVC-001", "name": "客户API", "dependencies": ["DB-001"], "risk": "高"},
+                    {"id": "SVC-002", "name": "订单服务", "dependencies": ["DB-002"], "risk": "高"},
+                    {"id": "SVC-003", "name": "分析服务", "dependencies": ["DB-003"], "risk": "中"},
                 ],
                 "constraints": {
                     "database_first": True,
@@ -599,114 +593,113 @@ TEST_CASE = {
 }
 ```
 
-### 2.2 Strategy Recommendation
+### 2.2 策略推荐
 
-#### TC-CM-PLAN-002: Migration Strategy Selection
+#### TC-CM-PLAN-002：迁移策略选择
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-PLAN-002",
-    "phase": "Planning",
+    "phase": "规划",
     "category": "strategy_recommendation",
-    "name": "Migration Strategy Recommendation",
+    "name": "迁移策略推荐",
     "description": """
-    Evaluates the AI's ability to recommend appropriate migration
-    strategies (Rehost, Replatform, Refactor, etc.) based on
-    application characteristics and business requirements.
+    评估AI根据应用程序特性和业务需求推荐适当迁移策略
+    （重新托管、重新平台化、重构等）的能力。
     """,
     "difficulty": "medium",
     "test_scenarios": [
         {
             "scenario_id": "STR-001",
-            "scenario_name": "Application Portfolio Strategy Mix",
+            "scenario_name": "应用程序组合策略组合",
             "input": {
                 "applications": [
                     {
                         "id": "APP-001",
-                        "name": "Legacy monolith ERP",
+                        "name": "遗留单体ERP",
                         "characteristics": {
                             "age_years": 15,
                             "tech_stack": "Java 8, WAS 8.5, DB2",
                             "architecture": "monolithic",
                             "change_frequency": "quarterly",
-                            "technical_debt": "HIGH",
-                            "team_familiarity": "LOW",
-                            "business_criticality": "CRITICAL",
-                            "scaling_needs": "MODERATE",
-                            "customizations": "EXTENSIVE"
+                            "technical_debt": "高",
+                            "team_familiarity": "低",
+                            "business_criticality": "严重",
+                            "scaling_needs": "中等",
+                            "customizations": "大量"
                         }
                     },
                     {
                         "id": "APP-002",
-                        "name": "Customer Portal",
+                        "name": "客户门户",
                         "characteristics": {
                             "age_years": 3,
                             "tech_stack": "Node.js, React, PostgreSQL",
                             "architecture": "microservices",
                             "change_frequency": "weekly",
-                            "technical_debt": "LOW",
-                            "team_familiarity": "HIGH",
-                            "business_criticality": "HIGH",
-                            "scaling_needs": "HIGH",
-                            "customizations": "MINIMAL"
+                            "technical_debt": "低",
+                            "team_familiarity": "高",
+                            "business_criticality": "高",
+                            "scaling_needs": "高",
+                            "customizations": "最少"
                         }
                     },
                     {
                         "id": "APP-003",
-                        "name": "Batch Processing System",
+                        "name": "批处理系统",
                         "characteristics": {
                             "age_years": 8,
                             "tech_stack": "COBOL, VSAM, JCL",
                             "architecture": "mainframe",
                             "change_frequency": "rarely",
-                            "technical_debt": "MEDIUM",
-                            "team_familiarity": "VERY_LOW",
-                            "business_criticality": "MEDIUM",
-                            "scaling_needs": "LOW",
-                            "customizations": "MODERATE"
+                            "technical_debt": "中",
+                            "team_familiarity": "非常低",
+                            "business_criticality": "中",
+                            "scaling_needs": "低",
+                            "customizations": "中等"
                         }
                     },
                     {
                         "id": "APP-004",
-                        "name": "Real-time Analytics Dashboard",
+                        "name": "实时分析仪表板",
                         "characteristics": {
                             "age_years": 1,
                             "tech_stack": "Python, Kafka, Elastic",
                             "architecture": "event-driven",
                             "change_frequency": "daily",
-                            "technical_debt": "LOW",
-                            "team_familiarity": "HIGH",
-                            "business_criticality": "MEDIUM",
-                            "scaling_needs": "VERY_HIGH",
-                            "customizations": "MINIMAL"
+                            "technical_debt": "低",
+                            "team_familiarity": "高",
+                            "business_criticality": "中",
+                            "scaling_needs": "非常高",
+                            "customizations": "最少"
                         }
                     }
                 ]
             },
             "expected_outputs": {
                 "APP-001": {
-                    "recommended_strategy": "Refactor",
-                    "alternative_strategy": "Replatform",
-                    "rationale": "High technical debt, low team familiarity, extensive customizations justify refactoring to modern stack",
+                    "recommended_strategy": "重构",
+                    "alternative_strategy": "重新平台化",
+                    "rationale": "高技术债务、低团队熟悉度、大量定制化justify重构为现代栈",
                     "estimated_timeline_months": {"range": [12, 18]},
                     "estimated_cost": {"range": [1500000, 2500000]}
                 },
                 "APP-002": {
-                    "recommended_strategy": "Rehost",
-                    "alternative_strategy": "None",
-                    "rationale": "Modern stack, low debt, high team familiarity - quick win via rehost",
+                    "recommended_strategy": "重新托管",
+                    "alternative_strategy": "无",
+                    "rationale": "现代栈、低债务、高团队熟悉度 - 通过重新托管快速获胜",
                     "estimated_timeline_months": {"range": [1, 2]}
                 },
                 "APP-003": {
-                    "recommended_strategy": "Retain/Rehost",
-                    "alternative_strategy": "Replatform",
-                    "rationale": "Mainframe batch processing - consider retiring or minimal changes",
+                    "recommended_strategy": "保留/重新托管",
+                    "alternative_strategy": "重新平台化",
+                    "rationale": "大型机批处理 - 考虑淘汰或最小更改",
                     "estimated_timeline_months": {"range": [3, 6]}
                 },
                 "APP-004": {
-                    "recommended_strategy": "Refactor",
-                    "alternative_strategy": "Native Cloud Services",
-                    "rationale": "Already cloud-ready architecture, refactor to managed services for cost efficiency",
+                    "recommended_strategy": "重构",
+                    "alternative_strategy": "原生云服务",
+                    "rationale": "已是云就绪架构，重构为托管服务以提高成本效率",
                     "estimated_timeline_months": {"range": [3, 4]}
                 }
             },
@@ -733,30 +726,29 @@ TEST_CASE = {
 
 ---
 
-## Phase 3: Execution Tests
+## 第三阶段：执行测试
 
-### 3.1 Automated Migration
+### 3.1 自动化迁移
 
-#### TC-CM-EXEC-001: Pre-Migration Validation
+#### TC-CM-EXEC-001：迁移前验证
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-EXEC-001",
-    "phase": "Execution",
+    "phase": "执行",
     "category": "pre_migration_validation",
-    "name": "Pre-Migration Environment Validation",
+    "name": "迁移前环境验证",
     "description": """
-    Evaluates the AI's ability to perform comprehensive pre-migration
-    validation including connectivity, permissions, and prerequisites.
+    评估AI执行全面迁移前验证的能力，包括连接性、权限和先决条件。
     """,
     "difficulty": "medium",
     "test_scenarios": [
         {
             "scenario_id": "PRE-001",
-            "scenario_name": "Multi-Tier Application Pre-Check",
+            "scenario_name": "多层应用程序预检查",
             "input": {
                 "migration_task": {
-                    "source": "on-premise vmware",
+                    "source": "本地vmware",
                     "target": "AWS EC2",
                     "application": "三层Web应用",
                     "vm_list": ["WEB-01", "WEB-02", "APP-01", "APP-02", "DB-01"]
@@ -774,34 +766,34 @@ TEST_CASE = {
             "expected_outputs": {
                 "validation_results": {
                     "network_connectivity": {
-                        "status": "PASS",
-                        "details": "VPN configured, VPC peering ready"
+                        "status": "通过",
+                        "details": "VPN已配置，VPC对等连接就绪"
                     },
                     "iam_permissions": {
-                        "status": "PASS",
-                        "details": "Migration role has required permissions"
+                        "status": "通过",
+                        "details": "迁移角色具有所需权限"
                     },
                     "subnet_availability": {
-                        "status": "PASS",
+                        "status": "通过",
                         "available_azs": ["us-east-1a", "us-east-1b", "us-east-1c"]
                     },
                     "security_group_rules": {
-                        "status": "WARNING",
-                        "details": "Port 3389 RDP needs adjustment for production"
+                        "status": "警告",
+                        "details": "生产环境需要调整端口3389 RDP"
                     },
                     "storage_capacity": {
-                        "status": "PASS",
+                        "status": "通过",
                         "available_iops": 30000
                     },
                     "instance_quota": {
-                        "status": "PASS",
+                        "status": "通过",
                         "available_count": 50
                     }
                 },
-                "overall_status": "PASS_WITH_WARNINGS",
+                "overall_status": "通过_带警告",
                 "warnings_count": 1,
                 "blocking_issues": [],
-                "recommendations": ["Update security group before cutover"]
+                "recommendations": ["切换前更新安全组"]
             }
         }
     ],
@@ -814,17 +806,16 @@ TEST_CASE = {
 }
 ```
 
-#### TC-CM-EXEC-002: Migration Execution Monitoring
+#### TC-CM-EXEC-002：迁移执行监控
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-EXEC-002",
-    "phase": "Execution",
+    "phase": "执行",
     "category": "migration_monitoring",
-    "name": "Real-time Migration Progress Monitoring",
+    "name": "实时迁移进度监控",
     "description": """
-    Evaluates the AI's ability to monitor migration progress,
-    detect issues, and provide real-time status updates.
+    评估AI监控迁移进度、检测问题并提供实时状态更新的能力。
     """,
     "difficulty": "high",
     "simulated_migration": {
@@ -840,7 +831,7 @@ TEST_CASE = {
     "test_scenarios": [
         {
             "scenario_id": "MON-001",
-            "scenario_name": "Normal Migration Progress",
+            "scenario_name": "正常迁移进度",
             "input": {
                 "elapsed_time_minutes": 60,
                 "completed_vms": 15,
@@ -851,13 +842,13 @@ TEST_CASE = {
             "expected_outputs": {
                 "progress_percentage": {"expected": 30, "tolerance": 5},
                 "estimated_completion_time": {"expected_minutes": 120, "tolerance": 20},
-                "status": "ON_TRACK",
+                "status": "正常",
                 "health_score": {"min": 85}
             }
         },
         {
             "scenario_id": "MON-002",
-            "scenario_name": "Migration with Failures",
+            "scenario_name": "带失败的迁移",
             "input": {
                 "elapsed_time_minutes": 90,
                 "completed_vms": 20,
@@ -866,23 +857,23 @@ TEST_CASE = {
                 "replication_throughput_mbps": 380,
                 "current_phase": "replication",
                 "errors_logged": [
-                    {"vm": "WEB-03", "error": "Storage timeout", "timestamp": "T+85"},
-                    {"vm": "APP-05", "error": "Network partition", "timestamp": "T+88"},
-                    {"vm": "DB-02", "error": "Checksum mismatch", "timestamp": "T+89"}
+                    {"vm": "WEB-03", "error": "存储超时", "timestamp": "T+85"},
+                    {"vm": "APP-05", "error": "网络分区", "timestamp": "T+88"},
+                    {"vm": "DB-02", "error": "校验和不匹配", "timestamp": "T+89"}
                 ]
             },
             "expected_outputs": {
-                "status": "DEGRADED",
+                "status": "降级",
                 "failure_impact_analysis": {
-                    "WEB-03": {"severity": "LOW", "retry_recommended": True},
-                    "APP-05": {"severity": "MEDIUM", "retry_recommended": True},
-                    "DB-02": {"severity": "HIGH", "manual_intervention_required": True}
+                    "WEB-03": {"severity": "低", "retry_recommended": True},
+                    "APP-05": {"severity": "中", "retry_recommended": True},
+                    "DB-02": {"severity": "高", "manual_intervention_required": True}
                 },
                 "updated_estimated_completion": {"expected_range": [150, 200]},
                 "recovery_recommendations": [
-                    "Retry WEB-03 and APP-05 automatically",
-                    "Investigate DB-02 storage subsystem",
-                    "Consider reducing replication parallelism"
+                    "自动重试WEB-03和APP-05",
+                    "调查DB-02存储子系统",
+                    "考虑减少复制并行度"
                 ],
                 "health_score": {"expected_range": [65, 75]}
             }
@@ -897,25 +888,24 @@ TEST_CASE = {
 }
 ```
 
-### 3.2 Rollback Capability
+### 3.2 回滚能力
 
-#### TC-CM-EXEC-003: Rollback Trigger and Execution
+#### TC-CM-EXEC-003：回滚触发和执行
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-EXEC-003",
-    "phase": "Execution",
+    "phase": "执行",
     "category": "rollback",
-    "name": "Migration Rollback Capability",
+    "name": "迁移回滚能力",
     "description": """
-    Evaluates the AI's ability to determine when rollback is needed,
-    execute rollback procedures, and validate successful rollback.
+    评估AI确定何时需要回滚、执行回滚程序并验证成功回滚的能力。
     """,
     "difficulty": "high",
     "test_scenarios": [
         {
             "scenario_id": "RB-001",
-            "scenario_name": "Critical Failure Rollback",
+            "scenario_name": "严重故障回滚",
             "input": {
                 "migration_state": {
                     "phase": "cutover",
@@ -926,8 +916,8 @@ TEST_CASE = {
                         {
                             "vm": "DB-PRIMARY",
                             "failure_type": "connection_timeout",
-                            "affected_services": ["Order Service", "Payment Service", "User Service"],
-                            "service_impact": "CRITICAL",
+                            "affected_services": ["订单服务", "支付服务", "用户服务"],
+                            "service_impact": "严重",
                             "rto_minutes": 30,
                             "current_downtime_minutes": 25
                         }
@@ -940,31 +930,31 @@ TEST_CASE = {
                         "type": "full_rollback",
                         "duration_minutes": 45,
                         "data_loss_mb": 0,
-                        "risk": "LOW"
+                        "risk": "低"
                     },
                     {
                         "type": "targeted_rollback",
                         "duration_minutes": 20,
                         "data_loss_mb": 1500,
                         "affected_services": ["DB-PRIMARY"],
-                        "risk": "MEDIUM"
+                        "risk": "中"
                     }
                 ]
             },
             "expected_outputs": {
                 "rollback_decision": {
                     "recommended": "targeted_rollback",
-                    "rationale": "Critical production impact, 25 min downtime, 5 min to RTO",
+                    "rationale": "严重生产影响，25分钟停机，5分钟到RTO",
                     "decision_time_seconds": {"max": 30}
                 },
                 "rollback_plan": {
                     "type": "targeted_rollback",
                     "sequence": [
-                        "Stop all write operations to DB-PRIMARY",
-                        "Revert DB-PRIMARY to T-35 checkpoint",
-                        "Restore network connectivity",
-                        "Verify service dependencies",
-                        "Resume services in order: Auth → Order → Payment"
+                        "停止对DB-PRIMARY的所有写操作",
+                        "将DB-PRIMARY恢复到T-35检查点",
+                        "恢复网络连接",
+                        "验证服务依赖关系",
+                        "按顺序恢复服务：认证 → 订单 → 支付"
                     ],
                     "estimated_duration_minutes": 20,
                     "data_loss_mb": 1500
@@ -976,7 +966,7 @@ TEST_CASE = {
                 ],
                 "post_rollback_status": {
                     "expected_recovery_time": 20,
-                    "services_restored": ["Auth", "Order", "Payment"],
+                    "services_restored": ["认证", "订单", "支付"],
                     "rto_met": True
                 }
             }
@@ -998,29 +988,28 @@ TEST_CASE = {
 
 ---
 
-## Phase 4: Validation Tests
+## 第四阶段：验证测试
 
-### 4.1 Functional Validation
+### 4.1 功能验证
 
-#### TC-CM-VAL-001: Post-Migration Functional Verification
+#### TC-CM-VAL-001：迁移后功能验证
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-VAL-001",
-    "phase": "Validation",
+    "phase": "验证",
     "category": "functional_validation",
-    "name": "Post-Migration Functional Tests",
+    "name": "迁移后功能测试",
     "description": """
-    Evaluates the AI's ability to execute and interpret post-migration
-    functional validation tests.
+    评估AI执行和解释迁移后功能验证测试的能力。
     """,
     "difficulty": "medium",
     "test_scenarios": [
         {
             "scenario_id": "FUNC-001",
-            "scenario_name": "Web Application Functional Validation",
+            "scenario_name": "Web应用程序功能验证",
             "input": {
-                "migrated_application": "E-commerce Platform",
+                "migrated_application": "电子商务平台",
                 "test_suite": {
                     "smoke_tests": [
                         {"name": "homepage_load", "endpoint": "/", "expected_status": 200},
@@ -1046,7 +1035,7 @@ TEST_CASE = {
                 }
             },
             "expected_outputs": {
-                "overall_status": "PASS",
+                "overall_status": "通过",
                 "test_pass_rate": 100.0,
                 "functional_equivalence_score": {"min": 95},
                 "issues_found": [],
@@ -1055,9 +1044,9 @@ TEST_CASE = {
         },
         {
             "scenario_id": "FUNC-002",
-            "scenario_name": "API Contract Validation",
+            "scenario_name": "API契约验证",
             "input": {
-                "api_service": "User Management API",
+                "api_service": "用户管理API",
                 "pre_migration_schema_hash": "abc123",
                 "post_migration_schema_hash": "abc123",
                 "endpoint_tests": [
@@ -1092,25 +1081,24 @@ TEST_CASE = {
 }
 ```
 
-### 4.2 Performance Validation
+### 4.2 性能验证
 
-#### TC-CM-VAL-002: Post-Migration Performance Benchmark
+#### TC-CM-VAL-002：迁移后性能基准
 
 ```python
 TEST_CASE = {
     "id": "TC-CM-VAL-002",
-    "phase": "Validation",
+    "phase": "验证",
     "category": "performance_validation",
-    "name": "Performance Against Pre-Migration Baselines",
+    "name": "针对迁移前基准的性能",
     "description": """
-    Validates that migrated workloads meet or exceed pre-migration
-    performance benchmarks.
+    验证迁移的工作负载满足或超过迁移前的性能基准。
     """,
     "difficulty": "high",
     "test_scenarios": [
         {
             "scenario_id": "PERF-001",
-            "scenario_name": "Web Application Performance",
+            "scenario_name": "Web应用程序性能",
             "input": {
                 "pre_migration_baseline": {
                     "avg_response_time_ms": 150,
@@ -1136,19 +1124,19 @@ TEST_CASE = {
             },
             "expected_outputs": {
                 "performance_comparison": {
-                    "response_time_improvement": {"expected_min": 0.10},  # 10% improvement
-                    "throughput_improvement": {"expected_min": 0.15},  # 15% improvement
-                    "error_rate_improvement": {"expected_min": 0.10},  # 10% improvement
+                    "response_time_improvement": {"expected_min": 0.10},  # 10%改进
+                    "throughput_improvement": {"expected_min": 0.15},  # 15%改进
+                    "error_rate_improvement": {"expected_min": 0.10},  # 10%改进
                     "resource_efficiency_improvement": {"expected_min": 0.15}
                 },
-                "validation_status": "PASS",
+                "validation_status": "通过",
                 "performance_gain_percentage": {"expected_range": [10, 30]},
-                "optimization_recommendations": []  # Only if underperforming
+                "optimization_recommendations": []  # 仅在性能不佳时
             }
         },
         {
             "scenario_id": "PERF-002",
-            "scenario_name": "Database Performance Regression",
+            "scenario_name": "数据库性能回归",
             "input": {
                 "pre_migration_baseline": {
                     "queries_per_second": 5000,
@@ -1167,23 +1155,23 @@ TEST_CASE = {
             },
             "expected_outputs": {
                 "regression_detected": True,
-                "regression_severity": "MEDIUM",
+                "regression_severity": "中",
                 "affected_queries": [
                     "complex_aggregation_queries",
                     "multi_join_queries"
                 ],
                 "root_cause_hypothesis": [
-                    "New instance not optimized for workload pattern",
-                    "Cache warming period not complete",
-                    "Index statistics may need update"
+                    "新实例未针对工作负载模式优化",
+                    "缓存预热期未完成",
+                    "索引统计可能需要更新"
                 ],
                 "recommendations": [
-                    "Run ANALYZE on database",
-                    "Review query execution plans",
-                    "Consider instance type adjustment",
-                    "Pre-warm cache with common queries"
+                    "对数据库运行ANALYZE",
+                    "审查查询执行计划",
+                    "考虑调整实例类型",
+                    "用常见查询预热缓存"
                 ],
-                "validation_status": "CONDITIONAL_PASS"
+                "validation_status": "条件通过"
             }
         }
     ],
@@ -1202,60 +1190,60 @@ TEST_CASE = {
 
 ---
 
-## Quality Gates Summary
+## 质量门禁总结
 
-### Assessment Phase
+### 评估阶段
 
-| Metric | Threshold | Weight |
+| 指标 | 阈值 | 权重 |
 |--------|-----------|--------|
-| Infrastructure Discovery Rate | >= 98% | 0.35 |
-| False Positive Rate | <= 3% | 0.25 |
-| Risk Detection Rate | >= 95% | 0.25 |
-| Cost Estimation Accuracy | >= 85% | 0.15 |
+| 基础设施发现率 | >= 98% | 0.35 |
+| 误报率 | <= 3% | 0.25 |
+| 风险检测率 | >= 95% | 0.25 |
+| 成本估算准确性 | >= 85% | 0.15 |
 
-### Planning Phase
+### 规划阶段
 
-| Metric | Threshold | Weight |
+| 指标 | 阈值 | 权重 |
 |--------|-----------|--------|
-| Dependency Satisfaction | 100% | 0.30 |
-| Constraint Satisfaction | 100% | 0.25 |
-| Sequencing Optimality | >= 85% | 0.25 |
-| Strategy Recommendation Accuracy | >= 85% | 0.20 |
+| 依赖满意度 | 100% | 0.30 |
+| 约束满意度 | 100% | 0.25 |
+| 排序优化性 | >= 85% | 0.25 |
+| 策略推荐准确性 | >= 85% | 0.20 |
 
-### Execution Phase
+### 执行阶段
 
-| Metric | Threshold | Weight |
+| 指标 | 阈值 | 权重 |
 |--------|-----------|--------|
-| Migration Success Rate | >= 99% | 0.40 |
-| Pre-validation Accuracy | >= 95% | 0.20 |
-| Rollback Success Rate | >= 95% | 0.25 |
-| Issue Detection Rate | >= 90% | 0.15 |
+| 迁移成功率 | >= 99% | 0.40 |
+| 预验证准确性 | >= 95% | 0.20 |
+| 回滚成功率 | >= 95% | 0.25 |
+| 问题检测率 | >= 90% | 0.15 |
 
-### Validation Phase
+### 验证阶段
 
-| Metric | Threshold | Weight |
+| 指标 | 阈值 | 权重 |
 |--------|-----------|--------|
-| Functional Test Pass Rate | >= 95% | 0.30 |
-| Performance Baseline Match | >= 90% | 0.35 |
-| Data Integrity | 100% | 0.20 |
-| Security Validation | 100% | 0.15 |
+| 功能测试通过率 | >= 95% | 0.30 |
+| 性能基准匹配 | >= 90% | 0.35 |
+| 数据完整性 | 100% | 0.20 |
+| 安全验证 | 100% | 0.15 |
 
 ---
 
-## Running Cloud Migration Tests
+## 运行云迁移测试
 
 ### Python API
 
 ```python
 from ai_testing_benchmark.migration import CloudMigrationJourneyEvaluator
 
-# Initialize evaluator
+# 初始化评估器
 evaluator = CloudMigrationJourneyEvaluator(
     model="gpt-4",
     provider="openai"
 )
 
-# Run Assessment Phase tests
+# 运行评估阶段测试
 assessment_results = evaluator.evaluate_phase(
     phase="assessment",
     test_scenarios=["TC-CM-ASSESS-001", "TC-CM-ASSESS-002", "TC-CM-ASSESS-003"],
@@ -1263,25 +1251,25 @@ assessment_results = evaluator.evaluate_phase(
     verbose=True
 )
 
-# Run Planning Phase tests
+# 运行规划阶段测试
 planning_results = evaluator.evaluate_phase(
     phase="planning",
     test_scenarios=["TC-CM-PLAN-001", "TC-CM-PLAN-002"]
 )
 
-# Run Execution Phase tests
+# 运行执行阶段测试
 execution_results = evaluator.evaluate_phase(
     phase="execution",
     test_scenarios=["TC-CM-EXEC-001", "TC-CM-EXEC-002", "TC-CM-EXEC-003"]
 )
 
-# Run Validation Phase tests
+# 运行验证阶段测试
 validation_results = evaluator.evaluate_phase(
     phase="validation",
     test_scenarios=["TC-CM-VAL-001", "TC-CM-VAL-002"]
 )
 
-# Generate comprehensive report
+# 生成综合报告
 report = evaluator.generate_migration_report(
     results={
         "assessment": assessment_results,
@@ -1291,32 +1279,32 @@ report = evaluator.generate_migration_report(
     }
 )
 
-print(f"Migration Journey Score: {report['overall_score']}")
-print(f"Phase Scores: {report['phase_scores']}")
-print(f"Quality Gates: {report['quality_gates_passed']}")
+print(f"迁移旅程分数: {report['overall_score']}")
+print(f"阶段分数: {report['phase_scores']}")
+print(f"质量门禁: {report['quality_gates_passed']}")
 ```
 
-### CLI Usage
+### CLI用法
 
 ```bash
-# Run all migration phase tests
+# 运行所有迁移阶段测试
 python -m ai_testing_benchmark migration \
     --model gpt-4 \
     --phase all
 
-# Run specific phase
+# 运行特定阶段
 python -m ai_testing_benchmark migration \
     --model gpt-4 \
     --phase assessment \
     --tests TC-CM-ASSESS-001 TC-CM-ASSESS-002
 
-# Run with custom scenarios
+# 使用自定义场景运行
 python -m ai_testing_benchmark migration \
     --model gpt-4 \
     --phase planning \
     --scenarios-file custom_scenarios.json
 
-# Generate report
+# 生成报告
 python -m ai_testing_benchmark migration \
     --model gpt-4 \
     --phase all \

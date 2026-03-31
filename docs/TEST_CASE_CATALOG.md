@@ -1,238 +1,238 @@
-# Test Case Catalog
+# 测试用例目录
 
-This document catalogs all test cases in the AI-Testing-Benchmark framework.
-
----
-
-## Foundation Model Test Cases
-
-### Language Understanding (TC-FU-*)
-
-| ID | Category | Name | Threshold | Description |
-|----|----------|------|-----------|-------------|
-| TC-FU-001 | classification | Infrastructure Type Classification | 0.85 | Classify cloud infrastructure into IaaS/PaaS/SaaS/CaaS/FaaS |
-| TC-FU-002 | ner | Cloud Resource Entity Extraction | 0.88 | Extract resource entities from text |
-| TC-FU-003 | sentiment | Migration Sentiment Analysis | 0.85 | Detect sentiment in migration feedback |
-| TC-FU-004 | semantic_similarity | Requirement Similarity | 0.80 | Measure semantic similarity between requirements |
-| TC-FU-005 | inference | Logical Inference | 0.78 | Determine entailment/contradiction |
-
-### Reasoning (TC-RE-*)
-
-| ID | Category | Name | Threshold | Description |
-|----|----------|------|-----------|-------------|
-| TC-RE-001 | mathematical | Cloud Cost Calculation | 0.88 | Multi-step cost estimation |
-| TC-RE-002 | logical | Dependency Resolution | 0.90 | Deduce correct migration order |
-| TC-RE-003 | common_sense | Infrastructure Commonsense | 0.75 | Apply common sense to infrastructure scenarios |
-| TC-RE-004 | chain_of_thought | Multi-step Reasoning | 0.80 | Generate reasoning steps |
-
-### Generation (TC-GN-*)
-
-| ID | Category | Name | Threshold | Description |
-|----|----------|------|-----------|-------------|
-| TC-GN-001 | code | Terraform Generation | 0.88 | Generate valid Terraform code |
-| TC-GN-002 | summarization | Report Summarization | 0.85 | Summarize migration reports |
-| TC-GN-003 | creative | Migration Communication | 0.75 | Generate clear migration communications |
-| TC-GN-004 | transformation | Format Transformation | 0.80 | Transform data between formats |
+本文档收录了AI-Testing-Benchmark框架中的所有测试用例。
 
 ---
 
-## Dialogue Test Cases
+## 基础模型测试用例
 
-### Intent Recognition (TC-DIAL-INT-*)
+### 语言理解 (TC-FU-*)
 
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-DIAL-INT-001 | Greeting Intent | 0.90 | Detect greeting intents |
-| TC-DIAL-INT-002 | Migration Inquiry | 0.88 | Detect migration-related inquiries |
-| TC-DIAL-INT-003 | Risk Question | 0.85 | Detect risk assessment questions |
-| TC-DIAL-INT-004 | Cost Question | 0.85 | Detect cost estimation requests |
-| TC-DIAL-INT-005 | Status Query | 0.90 | Detect status check requests |
+| ID | 类别 | 名称 | 阈值 | 描述 |
+|----|------|------|-----------|-------------|
+| TC-FU-001 | classification | 基础设施类型分类 | 0.85 | 将云基础设施分类为IaaS/PaaS/SaaS/CaaS/FaaS |
+| TC-FU-002 | ner | 云资源实体提取 | 0.88 | 从文本中提取资源实体 |
+| TC-FU-003 | sentiment | 迁移情感分析 | 0.85 | 检测迁移反馈中的情感 |
+| TC-FU-004 | semantic_similarity | 需求相似度 | 0.80 | 测量需求之间的语义相似度 |
+| TC-FU-005 | inference | 逻辑推理 | 0.78 | 判断蕴含/矛盾关系 |
 
-### Entity Extraction (TC-DIAL-ENT-*)
+### 推理能力 (TC-RE-*)
 
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-DIAL-ENT-001 | Resource Count | 0.88 | Extract server/VM counts |
-| TC-DIAL-ENT-002 | Cloud Provider | 0.95 | Extract provider names (AWS/Azure/GCP) |
-| TC-DIAL-ENT-003 | Region | 0.90 | Extract region identifiers |
-| TC-DIAL-ENT-004 | Service Type | 0.85 | Extract service types |
+| ID | 类别 | 名称 | 阈值 | 描述 |
+|----|------|------|-----------|-------------|
+| TC-RE-001 | mathematical | 云成本计算 | 0.88 | 多步成本估算 |
+| TC-RE-002 | logical | 依赖解析 | 0.90 | 推导正确的迁移顺序 |
+| TC-RE-003 | common_sense | 基础设施常识 | 0.75 | 将常识应用于基础设施场景 |
+| TC-RE-004 | chain_of_thought | 多步推理 | 0.80 | 生成推理步骤 |
 
-### Dialogue Flow (TC-DIAL-FLOW-*)
+### 生成能力 (TC-GN-*)
 
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-DIAL-FLOW-001 | Assessment Journey | 0.85 | Complete assessment conversation |
-| TC-DIAL-FLOW-002 | Planning Journey | 0.82 | Complete planning conversation |
-| TC-DIAL-FLOW-003 | Troubleshooting Journey | 0.80 | Handle troubleshooting flow |
-
----
-
-## Cloud Migration Test Cases
-
-### Assessment Phase (TC-CM-ASSESS-*)
-
-| ID | Category | Name | Threshold | Description |
-|----|----------|------|-----------|-------------|
-| TC-CM-ASSESS-001 | infrastructure | Server Discovery | 0.95 | Discover server infrastructure |
-| TC-CM-ASSESS-002 | dependency | Dependency Mapping | 0.92 | Map application dependencies |
-| TC-CM-ASSESS-003 | risk | Risk Detection | 0.90 | Identify migration risks |
-| TC-CM-ASSESS-004 | cost | Cost Estimation | 0.85 | Estimate migration costs |
-| TC-CM-ASSESS-005 | compliance | Compliance Check | 0.88 | Check regulatory compliance |
-
-### Planning Phase (TC-CM-PLAN-*)
-
-| ID | Category | Name | Threshold | Description |
-|----|----------|------|-----------|-------------|
-| TC-CM-PLAN-001 | sequencing | Migration Order | 0.90 | Optimize migration sequence |
-| TC-CM-PLAN-002 | strategy | Strategy Selection | 0.85 | Recommend migration strategies |
-| TC-CM-PLAN-003 | timeline | Timeline Estimation | 0.80 | Estimate migration timeline |
-| TC-CM-PLAN-004 | resource | Resource Planning | 0.82 | Plan required resources |
-
-### Execution Phase (TC-CM-EXEC-*)
-
-| ID | Category | Name | Threshold | Description |
-|----|----------|------|-----------|-------------|
-| TC-CM-EXEC-001 | pre_migration | Pre-migration Validation | 0.95 | Validate pre-migration state |
-| TC-CM-EXEC-002 | monitoring | Progress Monitoring | 0.88 | Monitor migration progress |
-| TC-CM-EXEC-003 | rollback | Rollback Capability | 0.95 | Execute rollback procedures |
-| TC-CM-EXEC-004 | automation | Automated Migration | 0.90 | Automate migration steps |
-
-### Validation Phase (TC-CM-VAL-*)
-
-| ID | Category | Name | Threshold | Description |
-|----|----------|------|-----------|-------------|
-| TC-CM-VAL-001 | functional | Functional Tests | 0.95 | Post-migration functional tests |
-| TC-CM-VAL-002 | performance | Performance Tests | 0.90 | Performance against baseline |
-| TC-CM-VAL-003 | security | Security Validation | 0.95 | Validate security configuration |
-| TC-CM-VAL-004 | integration | Integration Tests | 0.92 | End-to-end integration tests |
+| ID | 类别 | 名称 | 阈值 | 描述 |
+|----|------|------|-----------|-------------|
+| TC-GN-001 | code | Terraform生成 | 0.88 | 生成有效的Terraform代码 |
+| TC-GN-002 | summarization | 报告摘要 | 0.85 | 总结迁移报告 |
+| TC-GN-003 | creative | 迁移沟通 | 0.75 | 生成清晰的迁移沟通内容 |
+| TC-GN-004 | transformation | 格式转换 | 0.80 | 在不同格式之间转换数据 |
 
 ---
 
-## Safety Test Cases
+## 对话测试用例
 
-### Prompt Injection (TC-SAFETY-PI-*)
+### 意图识别 (TC-DIAL-INT-*)
 
-| ID | Name | Threshold | Description |
+| ID | 名称 | 阈值 | 描述 |
 |----|------|-----------|-------------|
-| TC-SAFETY-PI-001 | System Override | 0.95 | Detect system prompt override |
-| TC-SAFETY-PI-002 | Context Injection | 0.93 | Detect context manipulation |
-| TC-SAFETY-PI-003 | Hidden Instructions | 0.90 | Detect hidden user instructions |
+| TC-DIAL-INT-001 | 问候意图 | 0.90 | 检测问候意图 |
+| TC-DIAL-INT-002 | 迁移咨询 | 0.88 | 检测与迁移相关的咨询 |
+| TC-DIAL-INT-003 | 风险问题 | 0.85 | 检测风险评估问题 |
+| TC-DIAL-INT-004 | 成本问题 | 0.85 | 检测成本估算请求 |
+| TC-DIAL-INT-005 | 状态查询 | 0.90 | 检测状态检查请求 |
 
-### Jailbreak (TC-SAFETY-JB-*)
+### 实体提取 (TC-DIAL-ENT-*)
 
-| ID | Name | Threshold | Description |
+| ID | 名称 | 阈值 | 描述 |
 |----|------|-----------|-------------|
-| TC-SAFETY-JB-001 | DAN Attack | 0.95 | Resist DAN-style jailbreak |
-| TC-SAFETY-JB-002 | Role Play | 0.92 | Resist role-play bypass attempts |
-| TC-SAFETY-JB-003 | Hypothetical | 0.90 | Apply safety in hypothetical scenarios |
+| TC-DIAL-ENT-001 | 资源数量 | 0.88 | 提取服务器/虚拟机数量 |
+| TC-DIAL-ENT-002 | 云提供商 | 0.95 | 提取提供商名称(AWS/Azure/GCP) |
+| TC-DIAL-ENT-003 | 区域 | 0.90 | 提取区域标识符 |
+| TC-DIAL-ENT-004 | 服务类型 | 0.85 | 提取服务类型 |
 
-### Bias (TC-SAFETY-BIAS-*)
+### 对话流程 (TC-DIAL-FLOW-*)
 
-| ID | Name | Threshold | Description |
+| ID | 名称 | 阈值 | 描述 |
 |----|------|-----------|-------------|
-| TC-SAFETY-BIAS-001 | Gender Parity | 0.90 | Ensure gender fairness |
-| TC-SAFETY-BIAS-002 | Race Parity | 0.88 | Ensure racial fairness |
-| TC-SAFETY-BIAS-003 | Age Parity | 0.85 | Ensure age-related fairness |
-| TC-SAFETY-BIAS-004 | Geographic Parity | 0.85 | Ensure geographic fairness |
-
-### Toxicity (TC-SAFETY-TOX-*)
-
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-SAFETY-TOX-001 | Profanity Filter | 0.95 | Filter profanity |
-| TC-SAFETY-TOX-002 | Hate Speech | 0.95 | Detect hate speech |
-| TC-SAFETY-TOX-003 | Harassment | 0.93 | Detect harassment content |
-
-### Hallucination (TC-SAFETY-HALL-*)
-
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-SAFETY-HALL-001 | Fact Grounding | 0.90 | Ground responses in facts |
-| TC-SAFETY-HALL-002 | Source Attribution | 0.88 | Attribute sources correctly |
-| TC-SAFETY-HALL-003 | Uncertainty Awareness | 0.85 | Express uncertainty appropriately |
+| TC-DIAL-FLOW-001 | 评估旅程 | 0.85 | 完成评估对话 |
+| TC-DIAL-FLOW-002 | 规划旅程 | 0.82 | 完成规划对话 |
+| TC-DIAL-FLOW-003 | 故障排除旅程 | 0.80 | 处理故障排除流程 |
 
 ---
 
-## Performance Test Cases
+## 云迁移测试用例
 
-### Latency (TC-PERF-LAT-*)
+### 评估阶段 (TC-CM-ASSESS-*)
 
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-PERF-LAT-001 | Simple Query P95 | 0.90 | P95 latency < 500ms for simple queries |
-| TC-PERF-LAT-002 | Complex Query P95 | 0.85 | P95 latency < 2000ms for complex queries |
-| TC-PERF-LAT-003 | Time to First Token | 0.85 | TTFT < 1000ms |
+| ID | 类别 | 名称 | 阈值 | 描述 |
+|----|------|------|-----------|-------------|
+| TC-CM-ASSESS-001 | infrastructure | 服务器发现 | 0.95 | 发现服务器基础设施 |
+| TC-CM-ASSESS-002 | dependency | 依赖映射 | 0.92 | 映射应用程序依赖 |
+| TC-CM-ASSESS-003 | risk | 风险检测 | 0.90 | 识别迁移风险 |
+| TC-CM-ASSESS-004 | cost | 成本估算 | 0.85 | 估算迁移成本 |
+| TC-CM-ASSESS-005 | compliance | 合规检查 | 0.88 | 检查监管合规性 |
 
-### Throughput (TC-PERF-THR-*)
+### 规划阶段 (TC-CM-PLAN-*)
 
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-PERF-THR-001 | Tokens Per Second | 0.85 | > 50 tokens/second |
-| TC-PERF-THR-002 | Concurrent Requests | 0.80 | Handle 10+ concurrent requests |
+| ID | 类别 | 名称 | 阈值 | 描述 |
+|----|------|------|-----------|-------------|
+| TC-CM-PLAN-001 | sequencing | 迁移顺序 | 0.90 | 优化迁移顺序 |
+| TC-CM-PLAN-002 | strategy | 策略选择 | 0.85 | 推荐迁移策略 |
+| TC-CM-PLAN-003 | timeline | 时间线估算 | 0.80 | 估算迁移时间线 |
+| TC-CM-PLAN-004 | resource | 资源规划 | 0.82 | 规划所需资源 |
 
-### Cost (TC-PERF-COST-*)
+### 执行阶段 (TC-CM-EXEC-*)
 
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-PERF-COST-001 | Cost Per 1K Tokens | 0.85 | Within 10% of expected cost |
-| TC-PERF-COST-002 | Cost Efficiency | 0.80 | Optimal token usage |
+| ID | 类别 | 名称 | 阈值 | 描述 |
+|----|------|------|-----------|-------------|
+| TC-CM-EXEC-001 | pre_migration | 迁移前验证 | 0.95 | 验证迁移前状态 |
+| TC-CM-EXEC-002 | monitoring | 进度监控 | 0.88 | 监控迁移进度 |
+| TC-CM-EXEC-003 | rollback | 回滚能力 | 0.95 | 执行回滚程序 |
+| TC-CM-EXEC-004 | automation | 自动化迁移 | 0.90 | 自动化迁移步骤 |
 
-### Scalability (TC-PERF-SCALE-*)
+### 验证阶段 (TC-CM-VAL-*)
 
-| ID | Name | Threshold | Description |
-|----|------|-----------|-------------|
-| TC-PERF-SCALE-001 | Linear Scaling | 0.75 | Linear throughput scaling |
-| TC-PERF-SCALE-002 | Load Handling | 0.80 | Handle peak load gracefully |
+| ID | 类别 | 名称 | 阈值 | 描述 |
+|----|------|------|-----------|-------------|
+| TC-CM-VAL-001 | functional | 功能测试 | 0.95 | 迁移后功能测试 |
+| TC-CM-VAL-002 | performance | 性能测试 | 0.90 | 针对基准的性能测试 |
+| TC-CM-VAL-003 | security | 安全验证 | 0.95 | 验证安全配置 |
+| TC-CM-VAL-004 | integration | 集成测试 | 0.92 | 端到端集成测试 |
 
 ---
 
-## Custom Test Case Format
+## 安全测试用例
+
+### 提示注入 (TC-SAFETY-PI-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-SAFETY-PI-001 | 系统覆盖 | 0.95 | 检测系统提示覆盖 |
+| TC-SAFETY-PI-002 | 上下文注入 | 0.93 | 检测上下文操纵 |
+| TC-SAFETY-PI-003 | 隐藏指令 | 0.90 | 检测隐藏的用户指令 |
+
+### 越狱攻击 (TC-SAFETY-JB-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-SAFETY-JB-001 | DAN攻击 | 0.95 | 抵抗DAN式越狱 |
+| TC-SAFETY-JB-002 | 角色扮演 | 0.92 | 抵抗角色扮演绕过尝试 |
+| TC-SAFETY-JB-003 | 假设场景 | 0.90 | 在假设场景中应用安全策略 |
+
+### 偏见 (TC-SAFETY-BIAS-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-SAFETY-BIAS-001 | 性别平等 | 0.90 | 确保性别公平 |
+| TC-SAFETY-BIAS-002 | 种族平等 | 0.88 | 确保种族公平 |
+| TC-SAFETY-BIAS-003 | 年龄平等 | 0.85 | 确保年龄相关公平 |
+| TC-SAFETY-BIAS-004 | 地理公平 | 0.85 | 确保地理公平 |
+
+### 毒性 (TC-SAFETY-TOX-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-SAFETY-TOX-001 | 脏话过滤 | 0.95 | 过滤脏话 |
+| TC-SAFETY-TOX-002 | 仇恨言论 | 0.95 | 检测仇恨言论 |
+| TC-SAFETY-TOX-003 | 骚扰 | 0.93 | 检测骚扰内容 |
+
+### 幻觉 (TC-SAFETY-HALL-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-SAFETY-HALL-001 | 事实 grounding | 0.90 | 基于事实 grounding 响应 |
+| TC-SAFETY-HALL-002 | 来源归属 | 0.88 | 正确归属来源 |
+| TC-SAFETY-HALL-003 | 不确定性意识 | 0.85 | 适当表达不确定性 |
+
+---
+
+## 性能测试用例
+
+### 延迟 (TC-PERF-LAT-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-PERF-LAT-001 | 简单查询P95 | 0.90 | 简单查询P95延迟 < 500ms |
+| TC-PERF-LAT-002 | 复杂查询P95 | 0.85 | 复杂查询P95延迟 < 2000ms |
+| TC-PERF-LAT-003 | 首Token时间 | 0.85 | TTFT < 1000ms |
+
+### 吞吐量 (TC-PERF-THR-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-PERF-THR-001 | 每秒Token数 | 0.85 | > 50 tokens/秒 |
+| TC-PERF-THR-002 | 并发请求 | 0.80 | 处理10+并发请求 |
+
+### 成本 (TC-PERF-COST-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-PERF-COST-001 | 每1K Token成本 | 0.85 | 在预期成本的10%以内 |
+| TC-PERF-COST-002 | 成本效率 | 0.80 | 最优Token使用 |
+
+### 可扩展性 (TC-PERF-SCALE-*)
+
+| ID | 名称 | 阈值 | 描述 |
+|----|------|-----------|-------------|
+| TC-PERF-SCALE-001 | 线性扩展 | 0.75 | 线性吞吐量扩展 |
+| TC-PERF-SCALE-002 | 负载处理 | 0.80 | 优雅处理峰值负载 |
+
+---
+
+## 自定义测试用例格式
 
 ```python
 {
-    "id": "UNIQUE-ID",
-    "category": "category_name",
-    "phase": "evaluation_phase",
-    "name": "Test Case Name",
-    "description": "Detailed description",
-    "difficulty": "low|medium|high",
+    "id": "唯一-ID",
+    "category": "类别名称",
+    "phase": "评估阶段",
+    "name": "测试用例名称",
+    "description": "详细描述",
+    "difficulty": "低|中|高",
     "input": {
-        # Test input data
+        # 测试输入数据
     },
     "expected_output": {
-        # Expected output
+        # 预期输出
     },
     "expected_outputs": {
-        # Alternative expected outputs
+        # 替代预期输出
     },
     "evaluation_criteria": {
         "metric_name": {"threshold": 0.85, "weight": 0.5}
     },
     "pass_threshold": 0.80,
     "fail_threshold": 0.70,
-    "datasets": ["dataset_name"],
-    "tags": ["tag1", "tag2"]
+    "datasets": ["数据集名称"],
+    "tags": ["标签1", "标签2"]
 }
 ```
 
 ---
 
-## Test Case Metadata
+## 测试用例元数据
 
-Each test case includes:
+每个测试用例包含:
 
-| Field | Type | Description |
+| 字段 | 类型 | 描述 |
 |-------|------|-------------|
-| `id` | string | Unique identifier |
-| `category` | string | Test category |
-| `phase` | string | Evaluation phase |
-| `name` | string | Human-readable name |
-| `description` | string | Detailed description |
-| `difficulty` | string | low/medium/high |
-| `input` | dict | Test input |
-| `expected_output` | dict | Expected output |
-| `evaluation_criteria` | dict | Metrics and thresholds |
-| `pass_threshold` | float | Minimum passing score |
-| `fail_threshold` | float | Maximum failing score |
-| `datasets` | list | Reference datasets |
-| `tags` | list | Categorization tags |
+| `id` | string | 唯一标识符 |
+| `category` | string | 测试类别 |
+| `phase` | string | 评估阶段 |
+| `name` | string | 人类可读名称 |
+| `description` | string | 详细描述 |
+| `difficulty` | string | 低/中/高 |
+| `input` | dict | 测试输入 |
+| `expected_output` | dict | 预期输出 |
+| `evaluation_criteria` | dict | 指标和阈值 |
+| `pass_threshold` | float | 最低通过分数 |
+| `fail_threshold` | float | 最高失败分数 |
+| `datasets` | list | 参考数据集 |
+| `tags` | list | 分类标签 |
