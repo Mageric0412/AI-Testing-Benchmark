@@ -1,0 +1,421 @@
+{
+  "version": "1.0.0",
+  "description": "云迁移调研智能助手10阶段评估测试数据集",
+  "phases": [
+    {
+      "name": "resource_import",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-001",
+          "scenario_id": "JOURNEY-001",
+          "input": {
+            "raw_description": "我公司有如下IT基础设施：\n- 50台Windows Server 2019虚拟机\n- 30台Ubuntu 22.04虚拟机\n- 20台CentOS 7服务器\n- 5台MySQL 5.7数据库服务器\n- 3台PostgreSQL 13数据库\n- 2台Oracle 19c数据库\n- 10台Nginx负载均衡器\n- 5TB NFS存储"
+          },
+          "expected_outputs": {
+            "vm_count": 100,
+            "os_types": ["Windows Server 2019", "Ubuntu 22.04", "CentOS 7"],
+            "entities": ["MySQL", "PostgreSQL", "Oracle", "Nginx", "NFS"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-001B",
+          "scenario_id": "JOURNEY-001B",
+          "input": {
+            "raw_description": "电商平台基础设施：\n- 100台应用服务器（Windows Server 2016）\n- 50台数据库服务器（SQL Server 2014）\n- 30TB数据存储\n- 负载均衡器：F5 BIG-IP\n- CDN：CloudFlare\n- 每日订单量：50万单"
+          },
+          "expected_outputs": {
+            "app_server_count": 100,
+            "db_server_count": 50,
+            "storage_tb": 30,
+            "entities": ["F5 BIG-IP", "CloudFlare", "SQL Server"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-001C",
+          "scenario_id": "JOURNEY-001C",
+          "input": {
+            "raw_description": "Kubernetes集群配置：\n- 生产集群：80节点，c5.2xlarge和m5.xlarge混合\n- 预发布集群：15节点\n- 开发集群：10节点\n- 300个微服务\n- 每个微服务2-6个Pod\n- 使用Istio服务网格\n- 50TB持久化存储"
+          },
+          "expected_outputs": {
+            "clusters": 3,
+            "total_nodes": 105,
+            "services": 300,
+            "storage_tb": 50,
+            "entities": ["Istio", "Kubernetes"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "inventory_confirmation",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-002",
+          "scenario_id": "JOURNEY-002",
+          "input": {
+            "inventory_data": {
+              "vms": [
+                {"name": "WEB-01", "os": "Windows", "cpu": 4, "memory": 16},
+                {"name": "WEB-02", "os": "Windows", "cpu": 4, "memory": 16},
+                {"name": "DB-01", "os": "Linux", "cpu": 8, "memory": 32}
+              ],
+              "databases": [
+                {"name": "Oracle-ERP", "version": "19c", "size_tb": 2}
+              ]
+            }
+          },
+          "expected_outputs": {
+            "confirmed_items": ["WEB-01", "WEB-02", "DB-01", "Oracle-ERP"],
+            "completeness_rate": 1.0
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-002B",
+          "scenario_id": "JOURNEY-002B",
+          "input": {
+            "inventory_data": {
+              "servers": [
+                {"name": "APP-01", "type": "物理机", "os": "CentOS 7"},
+                {"name": "APP-02", "type": "物理机", "os": "CentOS 7"}
+              ],
+              "issues": [
+                {"item": "APP-02", "issue": "硬盘健康度下降"}
+              ]
+            }
+          },
+          "expected_outputs": {
+            "confirmed_items": ["APP-01", "APP-02"],
+            "issues_identified": 1,
+            "completeness_rate": 1.0
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "resource_summary",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-003",
+          "scenario_id": "JOURNEY-003",
+          "input": {
+            "resource_list": "共100台虚拟机：\n- 60台Web服务器 (Windows/Ubuntu)\n- 25台应用服务器 (CentOS)\n- 10台数据库服务器 (Oracle/MySQL/PostgreSQL)\n- 5台负载均衡器\n\n存储: 10TB SAN + 5TB NAS"
+          },
+          "expected_outputs": {
+            "key_info": ["100台VM", "Web服务器", "应用服务器", "数据库", "负载均衡", "存储"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-003B",
+          "scenario_id": "JOURNEY-003B",
+          "input": {
+            "resource_list": "IT资产清单：\n- 3个数据中心（北京、上海、广州）\n- 200台物理服务器\n- 500台VMware虚拟机\n- 50台数据库服务器\n- 20PB存储\n- 1000+网络设备"
+          },
+          "expected_outputs": {
+            "key_info": ["3个数据中心", "200台物理服务器", "500台虚拟机", "50台数据库", "存储", "网络设备"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "grouping_confirmation",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-004",
+          "scenario_id": "JOURNEY-004",
+          "input": {
+            "resources": [
+              {"id": "VM1", "type": "web", "dependencies": []},
+              {"id": "VM2", "type": "web", "dependencies": []},
+              {"id": "VM3", "type": "app", "dependencies": ["VM1", "VM2"]},
+              {"id": "VM4", "type": "db", "dependencies": ["VM3"]}
+            ]
+          },
+          "expected_outputs": {
+            "groups": [
+              {"name": "Web层", "resources": ["VM1", "VM2"]},
+              {"name": "应用层", "resources": ["VM3"]},
+              {"name": "数据层", "resources": ["VM4"]}
+            ],
+            "dependencies": ["VM3->VM1", "VM3->VM2", "VM4->VM3"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-004B",
+          "scenario_id": "JOURNEY-004B",
+          "input": {
+            "resources": [
+              {"id": "APP1", "type": "nginx", "tier": "frontend"},
+              {"id": "APP2", "type": "nginx", "tier": "frontend"},
+              {"id": "APP3", "type": "api-gateway", "tier": "middleware"},
+              {"id": "APP4", "type": "user-service", "tier": "backend"},
+              {"id": "APP5", "type": "order-service", "tier": "backend"},
+              {"id": "APP6", "type": "postgresql", "tier": "database"},
+              {"id": "APP7", "type": "redis", "tier": "cache"}
+            ]
+          },
+          "expected_outputs": {
+            "groups": 4,
+            "tiers": ["frontend", "middleware", "backend", "database"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "architecture_confirmation",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-005",
+          "scenario_id": "JOURNEY-005",
+          "input": {
+            "workload_info": {
+              "application_type": "三层Web应用",
+              "traffic": "日均100万PV",
+              "availability": "99.9%",
+              "data_size_tb": 5
+            }
+          },
+          "expected_outputs": {
+            "recommended_architecture": "高可用架构",
+            "components": ["ELB", "ASG", "RDS", "ElastiCache", "CloudWatch"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-005B",
+          "scenario_id": "JOURNEY-005B",
+          "input": {
+            "workload_info": {
+              "application_type": "大数据分析平台",
+              "traffic": "日均10TB数据处理",
+              "availability": "99.5%",
+              "data_size_tb": 500,
+              "compute_intensive": true
+            }
+          },
+          "expected_outputs": {
+            "recommended_architecture": "弹性计算架构",
+            "components": ["EMR", "S3", "EC2 Spot", "Glue"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "cloud_strategy",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-006",
+          "scenario_id": "JOURNEY-006",
+          "input": {
+            "application_info": {
+              "name": "企业ERP系统",
+              "age_years": 8,
+              "tech_stack": "Java 6, WebLogic, Oracle 11g",
+              "architecture": "单体",
+              "change_frequency": "季度",
+              "business_criticality": "高"
+            }
+          },
+          "expected_outputs": {
+            "recommended_strategies": ["重构", "Replatform"],
+            "rationale": "系统老旧但稳定，建议逐步重构"
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-006B",
+          "scenario_id": "JOURNEY-006B",
+          "input": {
+            "application_info": {
+              "name": "客户门户",
+              "age_years": 2,
+              "tech_stack": "Node.js, React, PostgreSQL",
+              "architecture": "微服务",
+              "change_frequency": "每天",
+              "business_criticality": "中"
+            }
+          },
+          "expected_outputs": {
+            "recommended_strategies": ["重新托管", "Rehost"],
+            "rationale": "现代化应用，适合lift-and-shift"
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "preference_confirmation",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-007",
+          "scenario_id": "JOURNEY-007",
+          "input": {
+            "user_input": "我们希望迁移到AWS，首选成本优化方案，希望保留一定的控制权"
+          },
+          "expected_outputs": {
+            "preferences": ["AWS", "成本优化", "保留控制权"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-007B",
+          "scenario_id": "JOURNEY-007B",
+          "input": {
+            "user_input": "我们倾向于使用阿里云，希望尽量减少运维工作，预算有限"
+          },
+          "expected_outputs": {
+            "preferences": ["阿里云", "减少运维", "预算有限"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "specification_recommendation",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-008",
+          "scenario_id": "JOURNEY-008",
+          "input": {
+            "workload_specs": {
+              "app_type": "Web应用",
+              "concurrent_users": 1000,
+              "peak_cpu": "70%",
+              "data_size_gb": 500
+            }
+          },
+          "expected_outputs": {
+            "recommended_specs": ["t3.large", "m5.large", "r5.xlarge"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-008B",
+          "scenario_id": "JOURNEY-008B",
+          "input": {
+            "workload_specs": {
+              "app_type": "数据库",
+              "db_type": "MySQL",
+              "data_size_gb": 10000,
+              "concurrent_connections": 5000,
+              "iops_requirement": "high"
+            }
+          },
+          "expected_outputs": {
+            "recommended_specs": ["r5.2xlarge", "r5.4xlarge", "RDS MySQL"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "compatibility_task",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-009",
+          "scenario_id": "JOURNEY-009",
+          "input": {
+            "environment_info": {
+              "source": "Oracle 19c on-premises",
+              "target": "AWS RDS Oracle",
+              "data_size_tb": 10
+            }
+          },
+          "expected_outputs": {
+            "compatibility_issues": ["字符集不兼容", "SQL语法差异"],
+            "migration_paths": ["DMS", "S3+Glue"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-009B",
+          "scenario_id": "JOURNEY-009B",
+          "input": {
+            "environment_info": {
+              "source": "SQL Server 2014 on Windows",
+              "target": "AWS RDS SQL Server",
+              "data_size_tb": 5,
+              "features_used": ["Full-Text Search", "SSIS"]
+            }
+          },
+          "expected_outputs": {
+            "compatibility_issues": ["Full-Text Search不支持", "SSIS迁移复杂"],
+            "migration_paths": ["备份还原", "DMS"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "report_generation",
+      "test_cases": [
+        {
+          "id": "TC-JOURNEY-010",
+          "scenario_id": "JOURNEY-010",
+          "input": {
+            "migration_data": {
+              "resources": 100,
+              "recommended_strategy": "分段迁移",
+              "estimated_duration_months": 6,
+              "estimated_cost_monthly": 50000
+            }
+          },
+          "expected_outputs": {
+            "required_sections": ["概述", "当前环境", "目标架构", "迁移策略", "时间线", "成本估算", "风险评估"],
+            "recommendations": ["建议先迁移非关键系统", "建立回滚方案"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        },
+        {
+          "id": "TC-JOURNEY-010B",
+          "scenario_id": "JOURNEY-010B",
+          "input": {
+            "migration_data": {
+              "resources": 50,
+              "workload_type": "电商平台",
+              "recommended_strategy": "重新平台化",
+              "estimated_duration_months": 4,
+              "estimated_cost_monthly": 80000,
+              "target_provider": "AWS"
+            }
+          },
+          "expected_outputs": {
+            "required_sections": ["概述", "当前环境分析", "目标架构设计", "迁移方案", "实施计划", "成本分析", "风险控制", "ROI分析"],
+            "recommendations": ["采用蓝绿部署", "建立监控告警"]
+          },
+          "pass_threshold": 0.8,
+          "weight": 1.0
+        }
+      ]
+    }
+  ]
+}

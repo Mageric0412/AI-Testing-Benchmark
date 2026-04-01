@@ -540,7 +540,42 @@ class CloudMigrationJourneyEvaluator(BaseEvaluator):
         return phase_result
 
     def _load_test_cases(self) -> List[Dict]:
-        """加载测试用例。"""
+        """从JSON文件加载测试用例。"""
+        import json
+        import os
+        from pathlib import Path
+
+        # 查找数据文件
+        possible_paths = [
+            Path(__file__).parent.parent.parent / "data" / "journey_test_cases.json",
+            Path(__file__).parent.parent.parent.parent / "data" / "journey_test_cases.json",
+            Path("data/journey_test_cases.json"),
+        ]
+
+        for path in possible_paths:
+            if path.exists():
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+
+                    test_cases = []
+                    for phase_data in data.get("phases", []):
+                        phase_name = phase_data.get("name", "")
+                        for tc in phase_data.get("test_cases", []):
+                            tc["phase"] = phase_name
+                            test_cases.append(tc)
+
+                    self.logger.info(f"从 {path} 加载了 {len(test_cases)} 个测试用例")
+                    return test_cases
+                except Exception as e:
+                    self.logger.warning(f"加载测试用例失败 {path}: {e}")
+
+        # 如果没有找到JSON文件，使用内置测试用例
+        self.logger.warning("未找到JSON测试数据文件，使用内置测试用例")
+        return self._get_builtin_test_cases()
+
+    def _get_builtin_test_cases(self) -> List[Dict]:
+        """获取内置测试用例（当JSON文件不可用时使用）。"""
         return [
             # Phase 1: 资源导入
             {
