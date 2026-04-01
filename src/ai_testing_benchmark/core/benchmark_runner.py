@@ -18,7 +18,7 @@ from ai_testing_benchmark.core.result import (
 
 from ai_testing_benchmark.evaluation import FoundationModelEvaluator
 from ai_testing_benchmark.dialogue import DialogueEvaluator
-from ai_testing_benchmark.migration import CloudMigrationEvaluator
+from ai_testing_benchmark.migration import CloudMigrationEvaluator, CloudMigrationJourneyEvaluator
 from ai_testing_benchmark.safety import SafetyEvaluator
 from ai_testing_benchmark.performance import PerformanceEvaluator
 
@@ -92,6 +92,15 @@ class BenchmarkRunner:
         # 云迁移评估器
         if self.config.is_phase_enabled("migration"):
             self.evaluators["migration"] = CloudMigrationEvaluator(
+                model_name=self.config.model.name,
+                provider=self.config.model.provider,
+                config=self.config.migration.custom_config,
+                verbose=self.logger._core.enabled
+            )
+
+        # 云迁移旅程评估器 (10阶段)
+        if self.config.is_phase_enabled("migration_journey"):
+            self.evaluators["migration_journey"] = CloudMigrationJourneyEvaluator(
                 model_name=self.config.model.name,
                 provider=self.config.model.provider,
                 config=self.config.migration.custom_config,
