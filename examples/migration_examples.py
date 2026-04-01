@@ -4,7 +4,6 @@
 
 import os
 from ai_testing_benchmark.migration import CloudMigrationEvaluator
-from ai_testing_benchmark.core.config import ModelConfig
 
 
 def example_infrastructure_discovery():
@@ -14,16 +13,14 @@ def example_infrastructure_discovery():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     discovery_tests = [
         {
-            "test_id": "DISC-001",
+            "id": "DISC-001",
+            "category": "assessment",
             "scenario_name": "中型企业基础设施",
             "description": """
             我们的IT基础设施包括：
@@ -43,7 +40,8 @@ def example_infrastructure_discovery():
             }
         },
         {
-            "test_id": "DISC-002",
+            "id": "DISC-002",
+            "category": "assessment",
             "scenario_name": "微服务架构",
             "description": """
             我们的系统运行在Kubernetes上：
@@ -62,15 +60,11 @@ def example_infrastructure_discovery():
         }
     ]
 
-    results = evaluator.evaluate_infrastructure_discovery(discovery_tests)
-
-    for result in results:
-        print(f"\n测试 {result['test_id']}: {result['scenario_name']}")
-        print(f"  发现率: {result['discovery_rate']:.2%}")
-        print(f"  准确率: {result['accuracy']:.2%}")
-        print(f"  误报率: {result['false_positive_rate']:.2%}")
-        if result.get('missing_items'):
-            print(f"  遗漏项: {result['missing_items']}")
+    for test_case in discovery_tests:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n测试 {test_case['id']}: {test_case['scenario_name']}")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 def example_dependency_mapping():
@@ -80,16 +74,14 @@ def example_dependency_mapping():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     dependency_tests = [
         {
-            "test_id": "DEPM-001",
+            "id": "DEPM-001",
+            "category": "assessment",
             "scenario_name": "三层Web应用依赖",
             "architecture": """
             Web层: React SPA -> Nginx -> S3/CloudFront
@@ -111,7 +103,8 @@ def example_dependency_mapping():
             ]
         },
         {
-            "test_id": "DEPM-002",
+            "id": "DEPM-002",
+            "category": "assessment",
             "scenario_name": "遗留系统依赖",
             "architecture": """
             遗留ERP系统 (AS/400, COBOL) -> MQSeries -> 中间件
@@ -127,14 +120,11 @@ def example_dependency_mapping():
         }
     ]
 
-    results = evaluator.evaluate_dependency_mapping(dependency_tests)
-
-    for result in results:
-        print(f"\n测试 {result['test_id']}: {result['scenario_name']}")
-        print(f"  依赖召回率: {result['recall']:.2%}")
-        print(f"  依赖精确率: {result['precision']:.2%}")
-        print(f"  循环检测: {'是' if result.get('cycle_detected') else '否'}")
-        print(f"  关键路径识别: {'是' if result.get('critical_path_identified') else '否'}")
+    for test_case in dependency_tests:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n测试 {test_case['id']}: {test_case['scenario_name']}")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 def example_cost_estimation():
@@ -144,16 +134,14 @@ def example_cost_estimation():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     cost_tests = [
         {
-            "test_id": "COST-001",
+            "id": "COST-001",
+            "category": "assessment",
             "scenario_name": "中型企业AWS迁移",
             "workload": {
                 "servers": 50,
@@ -173,7 +161,8 @@ def example_cost_estimation():
             }
         },
         {
-            "test_id": "COST-002",
+            "id": "COST-002",
+            "category": "assessment",
             "scenario_name": "多提供商比较",
             "workload": {
                 "ec2_instances": 30,
@@ -189,15 +178,11 @@ def example_cost_estimation():
         }
     ]
 
-    results = evaluator.evaluate_cost_estimation(cost_tests)
-
-    for result in results:
-        print(f"\n测试 {result['test_id']}: {result['scenario_name']}")
-        print(f"  估算准确率: {result['accuracy']:.2%}")
-        print(f"  分解准确率: {result.get('breakdown_accuracy', 0):.2%}")
-        if result.get('estimated_monthly_cost'):
-            print(f"  估算月成本: ${result['estimated_monthly_cost']:,.2f}")
-        print(f"  优化建议数量: {result.get('optimization_count', 0)}")
+    for test_case in cost_tests:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n测试 {test_case['id']}: {test_case['scenario_name']}")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 def example_migration_strategy():
@@ -207,16 +192,14 @@ def example_migration_strategy():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     strategy_tests = [
         {
-            "test_id": "STRAT-001",
+            "id": "STRAT-001",
+            "category": "planning",
             "scenario_name": "遗留ERP系统",
             "application": {
                 "name": "企业ERP系统",
@@ -231,7 +214,8 @@ def example_migration_strategy():
             "expected_strategy": "重构"
         },
         {
-            "test_id": "STRAT-002",
+            "id": "STRAT-002",
+            "category": "planning",
             "scenario_name": "现代化微服务",
             "application": {
                 "name": "客户门户",
@@ -246,7 +230,8 @@ def example_migration_strategy():
             "expected_strategy": "重新托管"
         },
         {
-            "test_id": "STRAT-003",
+            "id": "STRAT-003",
+            "category": "planning",
             "scenario_name": "传统批处理",
             "application": {
                 "name": "工资处理系统",
@@ -262,15 +247,11 @@ def example_migration_strategy():
         }
     ]
 
-    results = evaluator.evaluate_migration_strategy(strategy_tests)
-
-    for result in results:
-        print(f"\n测试 {result['test_id']}: {result['scenario_name']}")
-        print(f"  策略准确率: {result['strategy_accuracy']:.2%}")
-        print(f"  推荐策略: {result['recommended_strategy']}")
-        print(f"  预期策略: {result['expected_strategy']}")
-        print(f"  理由质量: {result.get('rationale_quality', 0):.2f}")
-        print(f"  理由: {result.get('rationale', 'N/A')}")
+    for test_case in strategy_tests:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n测试 {test_case['id']}: {test_case['scenario_name']}")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 def example_risk_assessment():
@@ -280,16 +261,14 @@ def example_risk_assessment():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     risk_tests = [
         {
-            "test_id": "RISK-001",
+            "id": "RISK-001",
+            "category": "assessment",
             "scenario_name": "金融数据迁移",
             "context": """
             公司：金融服务业
@@ -306,7 +285,8 @@ def example_risk_assessment():
             ]
         },
         {
-            "test_id": "RISK-002",
+            "id": "RISK-002",
+            "category": "assessment",
             "scenario_name": "遗留系统迁移",
             "context": """
             遗留系统：AS/400 + COBOL
@@ -322,15 +302,11 @@ def example_risk_assessment():
         }
     ]
 
-    results = evaluator.evaluate_risk_assessment(risk_tests)
-
-    for result in results:
-        print(f"\n测试 {result['test_id']}: {result['scenario_name']}")
-        print(f"  风险检测率: {result['detection_rate']:.2%}")
-        print(f"  严重程度准确率: {result.get('severity_accuracy', 0):.2%}")
-        print(f"  检测到的风险:")
-        for risk in result.get('identified_risks', []):
-            print(f"    - {risk['category']}: {risk['severity']}")
+    for test_case in risk_tests:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n测试 {test_case['id']}: {test_case['scenario_name']}")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 if __name__ == "__main__":

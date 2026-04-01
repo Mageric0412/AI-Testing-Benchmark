@@ -22,6 +22,12 @@ class EvaluationResult(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
+    issues: List[Dict[str, Any]] = Field(default_factory=list)
+
+    @property
+    def failed(self) -> bool:
+        """检查结果是否失败。"""
+        return not self.passed
 
     class Config:
         json_encoders = {

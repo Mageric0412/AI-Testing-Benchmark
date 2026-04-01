@@ -53,7 +53,7 @@ class DialogueEvaluator(BaseEvaluator):
             scenario_id=test_case.get("scenario_id", test_id),
             test_case_id=test_id,
             passed=result["passed"],
-            score=result["score"] * 100,
+            score=result["score"],
             metrics=result.get("metrics", {}),
             details=result.get("details", {}),
             execution_time_ms=execution_time

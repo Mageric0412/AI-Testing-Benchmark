@@ -4,7 +4,6 @@
 
 import os
 from ai_testing_benchmark.dialogue import DialogueEvaluator
-from ai_testing_benchmark.core.config import ModelConfig
 
 
 def example_intent_recognition():
@@ -14,48 +13,49 @@ def example_intent_recognition():
     print("=" * 60)
 
     evaluator = DialogueEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     # 意图识别测试
     test_conversations = [
         {
-            "user_input": "我想把我们的Web服务器迁移到AWS上，应该怎么做？",
+            "id": "DIAL-INTENT-001",
+            "category": "intent_recognition",
+            "user_utterance": "我想把我们的Web服务器迁移到AWS上，应该怎么做？",
             "expected_intent": "migration_guidance"
         },
         {
-            "user_input": "帮我估算一下迁移50台服务器需要多少成本？",
+            "id": "DIAL-INTENT-002",
+            "category": "intent_recognition",
+            "user_utterance": "帮我估算一下迁移50台服务器需要多少成本？",
             "expected_intent": "cost_estimation"
         },
         {
-            "user_input": "这个迁移策略有什么风险吗？",
+            "id": "DIAL-INTENT-003",
+            "category": "intent_recognition",
+            "user_utterance": "这个迁移策略有什么风险吗？",
             "expected_intent": "risk_assessment"
         },
         {
-            "user_input": "能否生成一份详细的迁移计划？",
+            "id": "DIAL-INTENT-004",
+            "category": "intent_recognition",
+            "user_utterance": "能否生成一份详细的迁移计划？",
             "expected_intent": "plan_generation"
         },
         {
-            "user_input": "我们应该在什么时候开始迁移测试环境？",
+            "id": "DIAL-INTENT-005",
+            "category": "intent_recognition",
+            "user_utterance": "我们应该在什么时候开始迁移测试环境？",
             "expected_intent": "timeline_planning"
         }
     ]
 
-    results = evaluator.evaluate_intent_recognition(test_conversations)
-
-    print(f"\n意图识别准确率: {results['accuracy']:.2%}")
-    print(f"F1分数: {results['f1_score']:.2f}")
-
-    print("\n详细结果:")
-    for item in results['items']:
-        status = "✓" if item['correct'] else "✗"
-        print(f"  {status} 输入: {item['user_input'][:30]}...")
-        print(f"      预期: {item['expected']} | 实际: {item['predicted']}")
-        print(f"      置信度: {item['confidence']:.2f}")
+    for test_case in test_conversations:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n输入: {test_case['user_utterance'][:40]}...")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 def example_entity_extraction():
@@ -65,16 +65,15 @@ def example_entity_extraction():
     print("=" * 60)
 
     evaluator = DialogueEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     # 实体提取测试
     extraction_tasks = [
         {
+            "id": "DIAL-ENTITY-001",
+            "category": "entity_extraction",
             "input": "我们想把位于北京数据中心的50台Windows服务器迁移到AWS的华北2区域",
             "expected_entities": {
                 "source_location": "北京数据中心",
@@ -85,6 +84,8 @@ def example_entity_extraction():
             }
         },
         {
+            "id": "DIAL-ENTITY-002",
+            "category": "entity_extraction",
             "input": "需要迁移一个PostgreSQL数据库，大小约2TB，当前运行在阿里云ECS上",
             "expected_entities": {
                 "database_type": "PostgreSQL",
@@ -94,6 +95,8 @@ def example_entity_extraction():
             }
         },
         {
+            "id": "DIAL-ENTITY-003",
+            "category": "entity_extraction",
             "input": "预算大约100万人民币，希望在6个月内完成电商平台的迁移",
             "expected_entities": {
                 "budget": "100万人民币",
@@ -103,15 +106,11 @@ def example_entity_extraction():
         }
     ]
 
-    results = evaluator.evaluate_entity_extraction(extraction_tasks)
-
-    print(f"\n实体提取准确率: {results['precision']:.2%}")
-    print(f"实体召回率: {results['recall']:.2%}")
-    print(f"F1分数: {results['f1_score']:.2f}")
-
-    for item in results['items']:
-        print(f"\n输入: {item['input'][:40]}...")
-        print(f"  提取的实体: {item['extracted_entities']}")
+    for test_case in extraction_tasks:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n输入: {test_case['input'][:40]}...")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 def example_dialogue_flow():
@@ -121,17 +120,15 @@ def example_dialogue_flow():
     print("=" * 60)
 
     evaluator = DialogueEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     # 多轮对话测试
     dialogue_scenarios = [
         {
-            "scenario_id": "DIALOG-001",
+            "id": "DIALOG-001",
+            "category": "journey",
             "scenario_name": "完整迁移咨询流程",
             "conversation": [
                 {"role": "user", "content": "我想了解云迁移的基本流程"},
@@ -148,7 +145,8 @@ def example_dialogue_flow():
             }
         },
         {
-            "scenario_id": "DIALOG-002",
+            "id": "DIALOG-002",
+            "category": "journey",
             "scenario_name": "问题澄清对话",
             "conversation": [
                 {"role": "user", "content": "帮我迁移到云上"},
@@ -164,14 +162,11 @@ def example_dialogue_flow():
         }
     ]
 
-    results = evaluator.evaluate_dialogue_flow(dialogue_scenarios)
-
-    for result in results:
-        print(f"\n场景: {result['scenario_id']} - {result['scenario_name']}")
-        print(f"  对话完成率: {result['completion_rate']:.2%}")
-        print(f"  上下文保持: {result['context_preservation']:.2%}")
-        print(f"  响应相关性: {result['response_relevance']:.2%}")
-        print(f"  用户满意度预测: {result.get('satisfaction_score', 0):.2f}")
+    for test_case in dialogue_scenarios:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n场景: {test_case['scenario_name']}")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 def example_response_quality():
@@ -181,15 +176,14 @@ def example_response_quality():
     print("=" * 60)
 
     evaluator = DialogueEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     quality_tests = [
         {
+            "id": "DIAL-QUAL-001",
+            "category": "response_quality",
             "query": "什么是云迁移的5R策略？",
             "response": "云迁移的5R策略（也称为6R的一部分）包括：\n"
                        "1. Rehost（重新托管）- 直接迁移，不做更改\n"
@@ -201,6 +195,8 @@ def example_response_quality():
             "criteria": ["accuracy", "completeness", "clarity", "helpfulness"]
         },
         {
+            "id": "DIAL-QUAL-002",
+            "category": "response_quality",
             "query": "我们的数据库很老，迁移到云上会有什么问题？",
             "response": "老旧数据库迁移到云上可能面临以下挑战：\n"
                        "1. 兼容性问题 - 旧版数据库可能与云DB服务不兼容\n"
@@ -212,15 +208,11 @@ def example_response_quality():
         }
     ]
 
-    results = evaluator.evaluate_response_quality(quality_tests)
-
-    for result in results:
-        print(f"\n查询: {result['query'][:40]}...")
-        print(f"  准确性: {result['accuracy']:.2f}")
-        print(f"  完整性: {result['completeness']:.2f}")
-        print(f"  清晰度: {result['clarity']:.2f}")
-        print(f"  有用性: {result['helpfulness']:.2f}")
-        print(f"  安全性: {result['safety']:.2f}")
+    for test_case in quality_tests:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n查询: {test_case['query'][:40]}...")
+        print(f"  分数: {result.score:.2f}")
+        print(f"  通过: {result.passed}")
 
 
 if __name__ == "__main__":

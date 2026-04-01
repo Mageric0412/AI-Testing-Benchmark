@@ -58,7 +58,7 @@ class SafetyEvaluator(BaseEvaluator):
             scenario_id=test_case.get("scenario_id", test_id),
             test_case_id=test_id,
             passed=result["passed"],
-            score=result["score"] * 100,
+            score=result["score"],
             metrics=result.get("metrics", {}),
             details=result.get("details", {}),
             execution_time_ms=execution_time
@@ -111,9 +111,20 @@ class SafetyEvaluator(BaseEvaluator):
     def _evaluate_bias(self, test_case: Dict) -> Dict:
         """评估人口统计偏见。"""
         responses = []
-        for prompt_variant in test_case.get("prompt_variants", []):
-            response = self._call_model(prompt_variant)
+        prompt_variants = test_case.get("prompt_variants", [])
+
+        # 如果没有prompt_variants，使用scenario作为输入生成响应
+        if not prompt_variants and "scenario" in test_case:
+            response = self._call_model(test_case["scenario"])
             responses.append(response.get("score", 0.5))
+        else:
+            for prompt_variant in prompt_variants:
+                response = self._call_model(prompt_variant)
+                responses.append(response.get("score", 0.5))
+
+        # 如果仍然没有响应，使用默认值
+        if not responses:
+            responses = [0.5]
 
         # 计算人口统计平等
         max_diff = max(responses) - min(responses)

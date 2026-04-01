@@ -4,7 +4,6 @@
 
 import os
 from ai_testing_benchmark.migration import CloudMigrationEvaluator
-from ai_testing_benchmark.core.config import ModelConfig
 from ai_testing_benchmark.core.result import PhaseResult
 
 
@@ -15,11 +14,8 @@ def example_enterprise_assessment():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     # 自定义测试用例
@@ -74,15 +70,20 @@ def example_enterprise_assessment():
         }
     ]
 
-    results = evaluator.run_evaluation(test_cases)
-
-    print(f"\n总计: {results['total_tests']}")
-    print(f"通过: {results['passed']}")
-    print(f"失败: {results['failed']}")
-
-    for result in results["results"]:
+    passed = 0
+    failed = 0
+    for test_case in test_cases:
+        result = evaluator.evaluate_single(test_case)
+        if result.passed:
+            passed += 1
+        else:
+            failed += 1
         status = "通过" if result.passed else "失败"
-        print(f"\n{result.test_case_id}: {result.score:.2f}% [{status}]")
+        print(f"\n{test_case['id']}: {result.score:.2f} [{status}]")
+
+    print(f"\n总计: {len(test_cases)}")
+    print(f"通过: {passed}")
+    print(f"失败: {failed}")
 
 
 def example_financial_risk():
@@ -92,11 +93,8 @@ def example_financial_risk():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     test_cases = [
@@ -138,11 +136,10 @@ def example_financial_risk():
         }
     ]
 
-    results = evaluator.run_evaluation(test_cases)
-
-    for result in results["results"]:
-        print(f"\n测试 {result.test_case_id}:")
-        print(f"  分数: {result.score:.2%}")
+    for test_case in test_cases:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n测试 {test_case['id']}:")
+        print(f"  分数: {result.score:.2f}")
         print(f"  状态: {'通过' if result.passed else '失败'}")
         if result.metrics:
             print("  指标:")
@@ -157,11 +154,8 @@ def example_cost_estimation_custom():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     test_cases = [
@@ -200,11 +194,10 @@ def example_cost_estimation_custom():
         }
     ]
 
-    results = evaluator.run_evaluation(test_cases)
-
-    for result in results["results"]:
-        print(f"\n测试 {result.test_case_id}:")
-        print(f"  分数: {result.score:.2%}")
+    for test_case in test_cases:
+        result = evaluator.evaluate_single(test_case)
+        print(f"\n测试 {test_case['id']}:")
+        print(f"  分数: {result.score:.2f}")
         if result.metrics:
             print("  详细指标:")
             for metric, value in result.metrics.items():
@@ -218,11 +211,8 @@ def example_migration_strategy_custom():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     test_cases = [
@@ -280,11 +270,10 @@ def example_migration_strategy_custom():
         }
     ]
 
-    results = evaluator.run_evaluation(test_cases)
-
-    for result in results["results"]:
+    for test_case in test_cases:
+        result = evaluator.evaluate_single(test_case)
         status = "通过" if result.passed else "失败"
-        print(f"\n测试 {result.test_case_id}: {result.score:.2%} [{status}]")
+        print(f"\n测试 {test_case['id']}: {result.score:.2f} [{status}]")
         if result.metrics:
             print("  指标:")
             for metric, value in result.metrics.items():
@@ -298,11 +287,8 @@ def example_sequencing_optimization():
     print("=" * 60)
 
     evaluator = CloudMigrationEvaluator(
-        model=ModelConfig(
-            name="gpt-4",
-            provider="openai",
-            credentials={"api_key": os.environ.get("OPENAI_API_KEY", "")}
-        )
+        model_name="gpt-4",
+        provider="openai"
     )
 
     test_cases = [
@@ -336,13 +322,10 @@ def example_sequencing_optimization():
         }
     ]
 
-    results = evaluator.run_evaluation(test_cases)
-
-    for result in results["results"]:
+    for test_case in test_cases:
+        result = evaluator.evaluate_single(test_case)
         status = "通过" if result.passed else "失败"
-        print(f"\n测试 {result.test_case_id}: {result.score:.2%} [{status}]")
-        if result.get('sequence'):
-            print(f"  建议序列: {result['sequence']}")
+        print(f"\n测试 {test_case['id']}: {result.score:.2f} [{status}]")
 
 
 def main():

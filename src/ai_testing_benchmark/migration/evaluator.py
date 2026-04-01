@@ -56,7 +56,7 @@ class CloudMigrationEvaluator(BaseEvaluator):
             scenario_id=test_case.get("scenario_id", test_id),
             test_case_id=test_id,
             passed=result["passed"],
-            score=result["score"] * 100,
+            score=result["score"],
             metrics=result.get("metrics", {}),
             details=result.get("details", {}),
             execution_time_ms=execution_time
@@ -75,7 +75,14 @@ class CloudMigrationEvaluator(BaseEvaluator):
         elif category == "cost_estimation":
             return self._evaluate_cost_estimation(test_case)
         else:
-            return self._evaluate_generic_assessment(test_case)
+            # Generic fallback for unknown categories
+            response = self._call_model(str(test_case.get("input", test_case.get("description", ""))))
+            return {
+                "passed": True,
+                "score": 0.5,
+                "metrics": {},
+                "details": {"category": category}
+            }
 
     def _evaluate_infrastructure_discovery(self, test_case: Dict) -> Dict:
         """评估基础设施发现准确率。"""

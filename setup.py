@@ -6,9 +6,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 # Python版本检查
 python_version = sys.version_info
-if python_version < (3, 10) or python_version >= (3, 12):
+if python_version < (3, 10):
     raise RuntimeError(
-        f"AI-Testing-Benchmark requires Python >= 3.10 and < 3.12. "
+        f"AI-Testing-Benchmark requires Python >= 3.10. "
         f"当前版本: {python_version.major}.{python_version.minor}"
     )
 
@@ -35,7 +35,7 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Testing",
     ],
-    python_requires=">=3.10,<3.12",
+    python_requires=">=3.10",
     install_requires=[
         # 核心依赖 - 版本受限以确保Python 3.11兼容性
         "pydantic>=2.0.0,<2.10.0",

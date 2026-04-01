@@ -56,7 +56,7 @@ class PerformanceEvaluator(BaseEvaluator):
             scenario_id=test_case.get("scenario_id", test_id),
             test_case_id=test_id,
             passed=result["passed"],
-            score=result["score"] * 100,
+            score=result["score"],
             metrics=result.get("metrics", {}),
             details=result.get("details", {}),
             execution_time_ms=execution_time
@@ -194,10 +194,12 @@ class PerformanceEvaluator(BaseEvaluator):
             "passed": avg_scalability >= 0.70,
             "score": avg_scalability,
             "metrics": {
-                "scalability_score": avg_scalability,
-                "throughput_by_concurrency": {r["concurrency"]: r["throughput"] for r in results}
+                "scalability_score": avg_scalability
             },
-            "details": {"scalability_results": results}
+            "details": {
+                "scalability_results": results,
+                "throughput_by_concurrency": {r["concurrency"]: r["throughput"] for r in results}
+            }
         }
 
     def _evaluate_generic_performance(self, test_case: Dict) -> Dict:

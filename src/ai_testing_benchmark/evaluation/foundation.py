@@ -57,7 +57,7 @@ class FoundationModelEvaluator(BaseEvaluator):
             scenario_id=test_case.get("scenario_id", test_id),
             test_case_id=test_id,
             passed=result["passed"],
-            score=result["score"] * 100,  # 转换为0-100 scale
+            score=result["score"],
             metrics=result["metrics"],
             details=result.get("details", {}),
             execution_time_ms=execution_time
@@ -191,7 +191,10 @@ class FoundationModelEvaluator(BaseEvaluator):
 
         if "final_answer" in expected_answer:
             expected_val = expected_answer["final_answer"]
-            predicted_val = predicted_answer.get("final_answer", 0)
+            if isinstance(predicted_answer, dict):
+                predicted_val = predicted_answer.get("final_answer", 0)
+            else:
+                predicted_val = 0
 
             if isinstance(expected_val, (int, float)) and isinstance(predicted_val, (int, float)):
                 if abs(expected_val - predicted_val) < 0.01:
