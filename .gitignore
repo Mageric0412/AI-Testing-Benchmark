@@ -92,3 +92,4 @@ data/processed/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.gstack/
