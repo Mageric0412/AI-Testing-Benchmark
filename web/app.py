@@ -325,8 +325,8 @@ def get_suite_overview() -> gr.Blocks:
     for phase, cases in phase_cases.items():
         md += f"\n#### {phase} ({len(cases)}个)\n"
         for tc in cases:
-            priority_emoji = "🔴" if tc.priority == "P0" else "🟡" if tc.priority == "P1" else "🟢"
-            md += f"- {priority_emoji} `{tc.id}`: {tc.description[:60]}...\n"
+            priority_label = f"[{tc.priority}]"  # P0/P1/P2 text labels per DESIGN.md
+            md += f"- {priority_label} `{tc.id}`: {tc.description[:60]}...\n"
 
     return gr.Markdown(md)
 
@@ -514,24 +514,29 @@ def get_config_editor() -> Dict[str, Any]:
 def create_app():
     """创建Gradio应用。"""
 
-    # 主题设置
+    # 主题设置 — Soft theme with orange primary (per DESIGN.md)
+    # Orange hue replaces default blue; neutral stays warm gray
     theme = gr.themes.Soft(
-        primary_hue="blue",
-        secondary_hue="green",
+        primary_hue="orange",
         neutral_hue="gray",
-        font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui"]
+        font=[gr.themes.GoogleFont("DM Sans"), "ui-sans-serif", "system-ui"]
     )
 
     with gr.Blocks(
         theme=theme,
         title="AI Testing Benchmark",
         css="""
+        /* DESIGN.md: Brutally Minimal + Warm Neutrals */
         .main-header { text-align: center; padding: 20px; }
-        .metric-card { background: #1a1a2e; padding: 20px; border-radius: 10px; color: white; }
-        .success-box { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 8px; }
-        .warning-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; }
-        .error-box { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; }
-        .gradio-container { background: #f8f9fa; }
+        .metric-card { background: #1a1a1a; padding: 20px; border-radius: 8px; color: #FAFAF8; }
+        .success-box { background: rgba(45,106,79,0.1); border-left: 3px solid #2D6A4F; padding: 15px; border-radius: 4px; }
+        .warning-box { background: rgba(188,108,37,0.1); border-left: 3px solid #BC6C25; padding: 15px; border-radius: 4px; }
+        .error-box { background: rgba(155,34,38,0.1); border-left: 3px solid #9B2226; padding: 15px; border-radius: 4px; }
+        .gradio-container { background: #FAFAF8; }
+        /* Typography per DESIGN.md */
+        .main-header h1 { font-family: 'DM Sans', sans-serif; font-weight: 700; }
+        /* Data tables use mono for numbers */
+        .dataframe { font-family: 'DM Sans', sans-serif; }
         """
     ) as app:
 
@@ -646,7 +651,7 @@ def create_app():
                         value="JSON",
                         label="导出格式"
                     )
-                    export_btn = gr.Button("📥 导出报告", variant="primary")
+                    export_btn = gr.Button("导出报告", variant="primary")
 
                 export_output = gr.Textbox(label="导出结果", lines=3)
 
