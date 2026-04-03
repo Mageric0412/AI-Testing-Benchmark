@@ -85,7 +85,7 @@ state = AppState()
 
 # ==================== 工具函数 ====================
 
-def create_score_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
+def create_score_chart(results: List[Dict]) -> go.Figure:
     """创建分数分布图。"""
     if not results:
         return go.Figure()
@@ -130,7 +130,7 @@ def create_score_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
     return fig
 
 
-def create_pass_rate_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
+def create_pass_rate_chart(results: List[Dict]) -> go.Figure:
     """创建通过率图表。"""
     if not results:
         return go.Figure()
@@ -182,7 +182,7 @@ def create_pass_rate_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
     return fig
 
 
-def create_confidence_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
+def create_confidence_chart(results: List[Dict]) -> go.Figure:
     """创建置信度分析图。"""
     if not results:
         return go.Figure()
@@ -230,7 +230,7 @@ def simulate_evaluation(tc: TestCase) -> ScoreResult:
     )
 
 
-def parse_xlsx_file(file_obj, progress: gr.Progress) -> Dict[str, Any]:
+def parse_xlsx_file(file_obj, progress=gr.Progress()) -> Dict[str, Any]:
     """解析上传的XLSX文件。"""
     if file_obj is None:
         return {"success": False, "message": "请上传文件"}
@@ -298,7 +298,7 @@ def parse_xlsx_file(file_obj, progress: gr.Progress) -> Dict[str, Any]:
 def get_suite_overview() -> gr.Blocks:
     """生成测试套件概览组件。"""
     if state.test_suite is None:
-        return gr.Markdown("❌ 请先上传测试套件")
+        return gr.Markdown("请先上传测试套件")
 
     suite = state.test_suite
 
@@ -334,8 +334,7 @@ def get_suite_overview() -> gr.Blocks:
 def run_evaluation(
     phases: List[str],
     max_samples: int,
-    show_details: bool,
-    progress: gr.Progress
+    progress=gr.Progress()
 ) -> tuple:
     """执行评测。"""
     # 防重复提交检查
@@ -343,10 +342,10 @@ def run_evaluation(
         return "⏳ 评测正在进行中，请稍候...", None, None, None, None
 
     if state.test_suite is None:
-        return "❌ 请先上传测试套件", None, None, None, None
+        return "请先上传测试套件", None, None, None, None
 
     if not phases:
-        return "❌ 请至少选择一个阶段", None, None, None, None
+        return "请至少选择一个阶段", None, None, None, None
 
     # 获取锁
     with state.evaluation_lock:
@@ -360,7 +359,7 @@ def run_evaluation(
         ][:max_samples]
 
         if not filtered_cases:
-            return "❌ 没有找到匹配的测试用例", None, None, None, None
+            return "没有找到匹配的测试用例", None, None, None, None
 
         # 执行评测
         results = []
@@ -440,7 +439,7 @@ def get_results_table() -> pd.DataFrame:
 def export_report(format: str) -> str:
     """导出报告。"""
     if not state.results:
-        return "❌ 没有可导出的结果"
+        return "没有可导出的结果"
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"benchmark_report_{timestamp}.{format.lower()}"
@@ -477,7 +476,7 @@ def export_report(format: str) -> str:
         content = df.to_csv(index=False)
 
     else:
-        return "❌ 不支持的格式"
+        return "不支持的格式"
 
     # 保存文件
     output_path = Path("exports")
@@ -552,7 +551,7 @@ def create_app():
                         file_input = gr.File(
                             label="选择XLSX文件",
                             file_types=[".xlsx", ".xls"],
-                            file_count=1
+                            file_count="single"
                         )
                         upload_btn = gr.Button("加载测试套件", variant="primary")
 
@@ -566,11 +565,11 @@ def create_app():
                 )
 
                 gr.Markdown("---")
-                gr.Markdown("### 📋 Sheet预览")
+                gr.Markdown("### Sheet预览")
                 sheet_preview = gr.DataFrame(headers=["名称", "类型", "行数", "列数"])
 
                 with gr.Row():
-                    suite_overview = gr.Markdown("❌ 请先上传测试套件")
+                    suite_overview = gr.Markdown("请先上传测试套件")
 
             # ==================== Tab 2: 执行评测 ====================
             with gr.TabItem("执行评测"):
@@ -580,10 +579,16 @@ def create_app():
                     with gr.Column(scale=1):
                         phase_selector = gr.Dropdown(
                             label="选择阶段",
-                            choices=["resource_import", "inventory_confirmation",
-                                    "resource_summary", "grouping_architecture",
-                                    "cloud_strategy", "spec_recommendation",
-                                    "compatibility", "report_generation"],
+                            choices=[
+                                ("resource_import", "资源导入"),
+                                ("inventory_confirmation", "资源清单确认"),
+                                ("resource_summary", "资源总结"),
+                                ("grouping_architecture", "分组与架构确认"),
+                                ("cloud_strategy", "云策略确认"),
+                                ("spec_recommendation", "规格推荐"),
+                                ("compatibility", "兼容性评估"),
+                                ("report_generation", "报告生成"),
+                            ],
                             multiselect=True,
                             value=["resource_import", "cloud_strategy"]
                         )
@@ -597,16 +602,13 @@ def create_app():
                         )
 
                         run_btn = gr.Button("开始评测", variant="primary", size="lg")
+                        results_table = gr.DataFrame(
+                            label="测试结果",
+                            wrap=True
+                        )
 
                     with gr.Column(scale=2):
                         eval_summary = gr.Markdown("点击\"开始评测\"按钮执行测试")
-
-                # 运行评测按钮事件
-                run_btn.click(
-                    fn=run_evaluation,
-                    inputs=[phase_selector, max_samples],
-                    outputs=[eval_summary, results_table, score_chart, pass_rate_chart, confidence_chart]
-                )
 
                 gr.Markdown("### 可视化结果")
                 with gr.Row():
@@ -615,18 +617,20 @@ def create_app():
 
                 confidence_chart = gr.Plot(label="置信度分析")
 
+                # 运行评测按钮事件 (在所有输出组件定义之后)
+                run_btn.click(
+                    fn=run_evaluation,
+                    inputs=[phase_selector, max_samples],
+                    outputs=[eval_summary, results_table, score_chart, pass_rate_chart, confidence_chart]
+                )
+
             # ==================== Tab 3: 结果详情 ====================
             with gr.TabItem("结果详情"):
                 gr.Markdown("### 评测结果详情")
 
-                results_table = gr.DataFrame(
-                    label="测试结果",
-                    wrap=True,
-                    column_width="auto"
-                )
-
                 refresh_btn = gr.Button("刷新结果")
 
+                # results_table is defined in Tab 2 and shared here
                 refresh_btn.click(
                     fn=get_results_table,
                     outputs=[results_table]
