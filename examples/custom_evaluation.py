@@ -1,10 +1,21 @@
 """
 自定义评估示例 - 云迁移特定场景评估。
+
+测试用例从 data/custom_test_cases.json 动态加载。
 """
 
-import os
+import json
+from pathlib import Path
 from ai_testing_benchmark.migration import CloudMigrationEvaluator
 from ai_testing_benchmark.core.result import PhaseResult
+
+
+def load_test_cases():
+    """从配置加载测试用例"""
+    data_path = Path(__file__).parent.parent / "data" / "custom_test_cases.json"
+    with open(data_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data
 
 
 def example_enterprise_assessment():
@@ -13,62 +24,14 @@ def example_enterprise_assessment():
     print("示例1: 企业级基础设施评估")
     print("=" * 60)
 
+    data = load_test_cases()
+    category_data = next(c for c in data["categories"] if c["name"] == "enterprise_assessment")
+    test_cases = category_data["test_cases"]
+
     evaluator = CloudMigrationEvaluator(
         model_name="gpt-4",
         provider="openai"
     )
-
-    # 自定义测试用例
-    test_cases = [
-        {
-            "id": "MY-ASSESS-001",
-            "phase": "assessment",
-            "category": "infrastructure_discovery",
-            "scenario_id": "ENTERPRISE-001",
-            "input": {
-                "description": """
-                企业级基础设施配置：
-                - 3个数据中心，共500台服务器
-                - VMware vSphere虚拟化环境
-                - 50TB SAN存储
-                - 200台运行各种工作负载的虚拟机
-                - 15台数据库服务器
-                - 10台负载均衡器
-                """
-            },
-            "expected_outputs": {
-                "total_servers": {"value": 500, "tolerance": 0.05},
-                "total_vms": {"value": 200, "tolerance": 0.1},
-                "storage_identified": {"value": 50, "tolerance": 0.1},
-                "db_servers": {"value": 15, "tolerance": 0.2}
-            },
-            "pass_threshold": 0.85
-        },
-        {
-            "id": "MY-ASSESS-002",
-            "phase": "assessment",
-            "category": "infrastructure_discovery",
-            "scenario_id": "KUBERNETES-001",
-            "input": {
-                "description": """
-                Kubernetes集群配置：
-                - 生产集群：100节点，混合使用c5和m5实例
-                - 预发布集群：20节点
-                - 开发集群：10节点
-                - 500个微服务
-                - 每个微服务3-8个Pod
-                - 使用Istio服务网格
-                - Prometheus + Grafana监控
-                """
-            },
-            "expected_outputs": {
-                "total_nodes": {"value": 130, "tolerance": 0.1},
-                "clusters": {"value": 3, "tolerance": 0},
-                "services": {"value": 500, "tolerance": 0.15}
-            },
-            "pass_threshold": 0.80
-        }
-    ]
 
     passed = 0
     failed = 0
@@ -92,49 +55,14 @@ def example_financial_risk():
     print("示例2: 金融行业风险识别")
     print("=" * 60)
 
+    data = load_test_cases()
+    category_data = next(c for c in data["categories"] if c["name"] == "financial_risk")
+    test_cases = category_data["test_cases"]
+
     evaluator = CloudMigrationEvaluator(
         model_name="gpt-4",
         provider="openai"
     )
-
-    test_cases = [
-        {
-            "id": "MY-RISK-001",
-            "phase": "assessment",
-            "category": "risk_identification",
-            "scenario_id": "FINANCE-RISK-001",
-            "input": {
-                "description": """
-                金融服务公司云迁移项目：
-
-                数据资产：
-                - 客户PII数据（姓名、身份证、银行账户）
-                - 交易记录（每日500万笔）
-                - 监管报告数据
-
-                合规要求：
-                - PCI-DSS 1级认证
-                - SOX合规
-                - GDPR（针对欧盟客户）
-                - 数据必须保留在中国境内
-
-                业务需求：
-                - 7x24小时可用性
-                - 零数据丢失要求
-                - 与现有核心系统集成
-                """
-            },
-            "expected_outputs": {
-                "risks": {
-                    "data_sovereignty": {"severity": "高"},
-                    "compliance": {"severity": "严重"},
-                    "availability": {"severity": "高"},
-                    "integration": {"severity": "中"}
-                }
-            },
-            "pass_threshold": 0.80
-        }
-    ]
 
     for test_case in test_cases:
         result = evaluator.evaluate_single(test_case)
@@ -153,46 +81,14 @@ def example_cost_estimation_custom():
     print("示例3: 自定义成本估算")
     print("=" * 60)
 
+    data = load_test_cases()
+    category_data = next(c for c in data["categories"] if c["name"] == "cost_estimation")
+    test_cases = category_data["test_cases"]
+
     evaluator = CloudMigrationEvaluator(
         model_name="gpt-4",
         provider="openai"
     )
-
-    test_cases = [
-        {
-            "id": "MY-COST-001",
-            "phase": "assessment",
-            "category": "cost_estimation",
-            "scenario_id": "COST-CUSTOM-001",
-            "input": {
-                "workload": {
-                    "web_servers": 30,
-                    "web_spec": "c5.large",
-                    "app_servers": 40,
-                    "app_spec": "c5.xlarge",
-                    "db_servers": 10,
-                    "db_spec": "r5.2xlarge",
-                    "storage_gb": 10000,
-                    "monthly_data_transfer_gb": 5000
-                },
-                "current_monthly_cost": "$80,000（本地数据中心）",
-                "target_provider": "AWS",
-                "migration_type": "lift_and_shift"
-            },
-            "expected_outputs": {
-                "estimated_monthly_cost": {
-                    "min": 45000,
-                    "max": 65000
-                },
-                "year_one_cost": {
-                    "min": 600000,
-                    "max": 850000
-                },
-                "breakdown_required": ["计算", "存储", "数据传输"]
-            },
-            "pass_threshold": 0.75
-        }
-    ]
 
     for test_case in test_cases:
         result = evaluator.evaluate_single(test_case)
@@ -210,65 +106,14 @@ def example_migration_strategy_custom():
     print("示例4: 迁移策略自定义推荐")
     print("=" * 60)
 
+    data = load_test_cases()
+    category_data = next(c for c in data["categories"] if c["name"] == "migration_strategy")
+    test_cases = category_data["test_cases"]
+
     evaluator = CloudMigrationEvaluator(
         model_name="gpt-4",
         provider="openai"
     )
-
-    test_cases = [
-        {
-            "id": "MY-STRAT-001",
-            "phase": "planning",
-            "category": "strategy_recommendation",
-            "scenario_id": "STRAT-CUSTOM-001",
-            "input": {
-                "application": {
-                    "name": "订单处理系统",
-                    "age_years": 8,
-                    "tech_stack": "Java 8, Spring MVC, Oracle 11g",
-                    "architecture": "单体",
-                    "change_frequency": "每周",
-                    "technical_debt": "中",
-                    "team_familiarity": "高",
-                    "business_criticality": "关键",
-                    "scaling_needs": "高",
-                    "customizations": "大量",
-                    "dependencies": ["支付网关", "库存系统", "物流API"]
-                }
-            },
-            "expected_outputs": {
-                "recommended_strategy": "重构",
-                "rationale_required": True,
-                "timeline_months": {"min": 6, "max": 12}
-            },
-            "pass_threshold": 0.80
-        },
-        {
-            "id": "MY-STRAT-002",
-            "phase": "planning",
-            "category": "strategy_recommendation",
-            "scenario_id": "STRAT-CUSTOM-002",
-            "input": {
-                "application": {
-                    "name": "内部文档管理系统",
-                    "age_years": 3,
-                    "tech_stack": "Node.js, React, MongoDB",
-                    "architecture": "微服务",
-                    "change_frequency": "每天",
-                    "technical_debt": "低",
-                    "team_familiarity": "高",
-                    "business_criticality": "低",
-                    "scaling_needs": "中",
-                    "customizations": "最少"
-                }
-            },
-            "expected_outputs": {
-                "recommended_strategy": "重新托管",
-                "rationale_required": True
-            },
-            "pass_threshold": 0.75
-        }
-    ]
 
     for test_case in test_cases:
         result = evaluator.evaluate_single(test_case)
@@ -286,41 +131,14 @@ def example_sequencing_optimization():
     print("示例5: 迁移排序优化")
     print("=" * 60)
 
+    data = load_test_cases()
+    category_data = next(c for c in data["categories"] if c["name"] == "sequencing_optimization")
+    test_cases = category_data["test_cases"]
+
     evaluator = CloudMigrationEvaluator(
         model_name="gpt-4",
         provider="openai"
     )
-
-    test_cases = [
-        {
-            "id": "MY-SEQ-001",
-            "phase": "planning",
-            "category": "sequencing_optimization",
-            "scenario_id": "SEQ-CUSTOM-001",
-            "input": {
-                "applications": [
-                    {"id": "APP-001", "name": "用户认证", "dependencies": [], "risk": "低", "business_priority": 1},
-                    {"id": "APP-002", "name": "产品目录", "dependencies": [], "risk": "低", "business_priority": 2},
-                    {"id": "APP-003", "name": "搜索服务", "dependencies": ["APP-002"], "risk": "中", "business_priority": 3},
-                    {"id": "APP-004", "name": "购物车", "dependencies": ["APP-001", "APP-003"], "risk": "中", "business_priority": 4},
-                    {"id": "APP-005", "name": "订单处理", "dependencies": ["APP-001", "APP-004"], "risk": "高", "business_priority": 5},
-                    {"id": "APP-006", "name": "支付服务", "dependencies": ["APP-001"], "risk": "严重", "business_priority": 6}
-                ],
-                "constraints": {
-                    "max_concurrent_migrations": 2,
-                    "team_capacity": 5,
-                    "must_complete_by": "6个月"
-                }
-            },
-            "expected_outputs": {
-                "valid_sequence": True,
-                "dependency_respected": True,
-                "constraint_satisfied": True,
-                "estimated_duration_months": {"min": 4, "max": 7}
-            },
-            "pass_threshold": 0.85
-        }
-    ]
 
     for test_case in test_cases:
         result = evaluator.evaluate_single(test_case)
