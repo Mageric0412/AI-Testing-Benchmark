@@ -15,6 +15,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 import random
+import threading
 
 # 添加项目路径
 import sys
@@ -41,11 +42,14 @@ class AppState:
     test_suite: Optional[LoadedTestSuite] = None
     results: List[Dict] = []
     scoring_engine: ScoringEngine = None
+    evaluation_in_progress: bool = False
+    evaluation_lock: threading.Lock = threading.Lock()
 
     def reset(self):
         self.test_suite = None
         self.results = []
         self.scoring_engine = ScoringEngine()
+        self.evaluation_in_progress = False
 
 state = AppState()
 
@@ -290,13 +294,22 @@ def run_evaluation(
     show_details: bool
 ) -> tuple:
     """执行评测。"""
+    # 防重复提交检查
+    if state.evaluation_in_progress:
+        return "⏳ 评测正在进行中，请稍候...", None, None, None
+
     if state.test_suite is None:
         return "❌ 请先上传测试套件", None, None, None
 
     if not phases:
         return "❌ 请至少选择一个阶段", None, None, None
 
-    # 过滤测试用例
+    # 获取锁
+    with state.evaluation_lock:
+        state.evaluation_in_progress = True
+
+    try:
+        # 过滤测试用例
     filtered_cases = [
         tc for tc in state.test_suite.test_cases
         if tc.phase in phases
@@ -355,6 +368,10 @@ def run_evaluation(
     score_chart = create_score_chart(results)
     pass_rate_chart = create_pass_rate_chart(results)
     confidence_chart = create_confidence_chart(results)
+
+    finally:
+        # 释放锁
+        state.evaluation_in_progress = False
 
     return (
         summary,

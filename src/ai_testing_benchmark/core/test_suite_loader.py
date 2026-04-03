@@ -18,6 +18,9 @@ except ImportError:
     Workbook = None
     Worksheet = None
 
+# 默认配置
+DEFAULT_MAX_FILE_SIZE_MB = 50
+
 import yaml
 import json
 
@@ -142,6 +145,18 @@ class TestSuiteLoader:
         path = Path(file_path)
         if not path.exists():
             raise FileNotFoundError(f"文件不存在: {file_path}")
+
+        # 文件大小检查
+        file_size_mb = path.stat().st_size / (1024 * 1024)
+        if file_size_mb > DEFAULT_MAX_FILE_SIZE_MB:
+            raise ValueError(
+                f"文件过大 ({file_size_mb:.1f}MB > {DEFAULT_MAX_FILE_SIZE_MB}MB)。"
+                f"请使用小于 {DEFAULT_MAX_FILE_SIZE_MB}MB 的文件。"
+            )
+
+        # 空文件检查
+        if path.stat().st_size == 0:
+            raise ValueError("文件为空，请提供有效的XLSX文件。")
 
         self.logger.info(f"正在加载XLSX文件: {file_path}")
 

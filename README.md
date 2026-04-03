@@ -71,7 +71,7 @@ pip install -e .
 # 启动Web界面
 cd web
 pip install -r requirements.txt
-streamlit run app.py
+python app.py
 ```
 
 ### 评分配置文件示例
