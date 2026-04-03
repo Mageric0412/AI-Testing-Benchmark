@@ -337,6 +337,10 @@ def run_evaluation(
     progress=gr.Progress()
 ) -> tuple:
     """执行评测。"""
+    # Gradio Dropdown multiselect 返回 str 或 List[str]，确保是 List
+    if isinstance(phases, str):
+        phases = [phases]
+
     # 防重复提交检查
     if state.evaluation_in_progress:
         return "⏳ 评测正在进行中，请稍候...", None, None, None, None
@@ -582,18 +586,19 @@ def create_app():
 
                 with gr.Row():
                     with gr.Column(scale=1):
+                        # Gradio 6.x: choices as dict {value: label}
                         phase_selector = gr.Dropdown(
                             label="选择阶段",
-                            choices=[
-                                ("resource_import", "资源导入"),
-                                ("inventory_confirmation", "资源清单确认"),
-                                ("resource_summary", "资源总结"),
-                                ("grouping_architecture", "分组与架构确认"),
-                                ("cloud_strategy", "云策略确认"),
-                                ("spec_recommendation", "规格推荐"),
-                                ("compatibility", "兼容性评估"),
-                                ("report_generation", "报告生成"),
-                            ],
+                            choices={
+                                "resource_import": "资源导入",
+                                "inventory_confirmation": "资源清单确认",
+                                "resource_summary": "资源总结",
+                                "grouping_architecture": "分组与架构确认",
+                                "cloud_strategy": "云策略确认",
+                                "spec_recommendation": "规格推荐",
+                                "compatibility": "兼容性评估",
+                                "report_generation": "报告生成",
+                            },
                             multiselect=True,
                             value=["resource_import", "cloud_strategy"]
                         )
