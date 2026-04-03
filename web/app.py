@@ -13,9 +13,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Callable
 import random
 import threading
+import time
 
 # 添加项目路径
 import sys
@@ -35,6 +36,34 @@ from ai_testing_benchmark.core.scoring_engine import (
     ConfidenceLevel,
     ScoreAggregationMethod
 )
+
+# 阶段名称映射 - 技术名称到人类可读的中文标签
+PHASE_NAME_MAPPING = {
+    "resource_import": "资源导入",
+    "inventory_confirmation": "资源清单确认",
+    "resource_summary": "资源总结",
+    "grouping_architecture": "分组与架构确认",
+    "cloud_strategy": "云策略确认",
+    "preference_confirmation": "偏好确认",
+    "spec_recommendation": "规格推荐",
+    "compatibility": "兼容性评估",
+    "report_generation": "报告生成",
+    "assessment": "评估阶段",
+    "planning": "规划阶段",
+    "execution": "执行阶段",
+    "verification": "验证阶段",
+    "foundation": "基础评估",
+    "dialogue": "对话评估",
+    "migration": "迁移评估",
+    "safety": "安全评估",
+    "performance": "性能评估",
+    "test": "测试",
+}
+
+def get_chinese_phase_name(phase: str) -> str:
+    """获取阶段的中文名称。"""
+    return PHASE_NAME_MAPPING.get(phase, phase)
+
 
 # 全局状态
 class AppState:
@@ -62,7 +91,9 @@ def create_score_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
         return go.Figure()
 
     scores = [r["score"] for r in results]
-    phases = [r["phase"] for r in results]
+
+    # 使用中文阶段名称
+    phases = [r.get("phase", r.get("phase_key", "未知")) for r in results]
 
     fig = make_subplots(
         rows=1, cols=2,
@@ -79,19 +110,19 @@ def create_score_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
     # 各阶段平均分数
     phase_scores = {}
     for r in results:
-        phase = r["phase"]
+        phase = r.get("phase", r.get("phase_key", "未知"))
         if phase not in phase_scores:
             phase_scores[phase] = []
         phase_scores[phase].append(r["score"])
 
     phase_avg = {k: sum(v) / len(v) for k, v in phase_scores.items()}
-    phases = list(phase_avg.keys())
+    phase_labels = [get_chinese_phase_name(k) for k in phase_avg.keys()]
     avg_scores = list(phase_avg.values())
 
     colors = ["#27ae60" if s >= 0.8 else "#f39c12" if s >= 0.6 else "#e74c3c" for s in avg_scores]
 
     fig.add_trace(
-        go.Bar(x=phases, y=avg_scores, name="平均分", marker_color=colors),
+        go.Bar(x=phase_labels, y=avg_scores, name="平均分", marker_color=colors),
         row=1, col=2
     )
 
@@ -127,23 +158,23 @@ def create_pass_rate_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
     # 各阶段通过率
     phase_stats = {}
     for r in results:
-        phase = r["phase"]
+        phase = r.get("phase", r.get("phase_key", "未知"))
         if phase not in phase_stats:
             phase_stats[phase] = {"total": 0, "passed": 0}
         phase_stats[phase]["total"] += 1
         phase_stats[phase]["passed"] += 1 if r["passed"] else 0
 
-    phases = list(phase_stats.keys())
+    phase_labels = [get_chinese_phase_name(p) for p in phase_stats.keys()]
     pass_rates = [
         (phase_stats[p]["passed"] / phase_stats[p]["total"] * 100)
         if phase_stats[p]["total"] > 0 else 0
-        for p in phases
+        for p in phase_stats.keys()
     ]
 
     colors = ["#27ae60" if r >= 80 else "#f39c12" if r >= 60 else "#e74c3c" for r in pass_rates]
 
     fig.add_trace(
-        go.Bar(x=phases, y=pass_rates, name="通过率%", marker_color=colors),
+        go.Bar(x=phase_labels, y=pass_rates, name="通过率%", marker_color=colors),
         row=1, col=2
     )
 
@@ -171,7 +202,7 @@ def create_confidence_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
             colorscale="RdYlGn",
             showscale=True
         ),
-        text=[f"Phase: {r['phase']}<br>Score: {r['score']:.3f}<br>Confidence: {r['confidence']:.3f}"
+        text=[f"阶段: {r.get('phase', r.get('phase_key', '未知'))}<br>分数: {r['score']:.3f}<br>置信度: {r['confidence']:.3f}"
               for r in results],
         hoverinfo="text"
     ))
@@ -199,12 +230,15 @@ def simulate_evaluation(tc: TestCase) -> ScoreResult:
     )
 
 
-def parse_xlsx_file(file_obj) -> Dict[str, Any]:
+def parse_xlsx_file(file_obj, progress: gr.Progress) -> Dict[str, Any]:
     """解析上传的XLSX文件。"""
     if file_obj is None:
         return {"success": False, "message": "请上传文件"}
 
     try:
+        # 模拟加载状态
+        progress(0.1, desc="正在保存文件...")
+
         # 保存上传的文件
         temp_dir = Path("temp")
         temp_dir.mkdir(exist_ok=True)
@@ -213,12 +247,18 @@ def parse_xlsx_file(file_obj) -> Dict[str, Any]:
         with open(temp_path, "wb") as f:
             f.write(file_obj.read())
 
-        # 加载测试套件
+        progress(0.3, desc="正在解析Sheet信息...")
+
+        # 获取Sheet信息（先预览）
         loader = TestSuiteLoader()
+        sheet_info = loader.get_sheet_info(str(temp_path))
+
+        progress(0.5, desc="正在加载测试套件...")
+
+        # 加载测试套件
         state.test_suite = loader.load_from_xlsx(str(temp_path))
 
-        # 获取Sheet信息
-        sheet_info = loader.get_sheet_info(str(temp_path))
+        progress(0.8, desc="正在生成统计信息...")
 
         # 统计信息
         phase_counts = {}
@@ -231,12 +271,15 @@ def parse_xlsx_file(file_obj) -> Dict[str, Any]:
             for info in sheet_info
         ])
 
+        # 使用中文阶段名称
         phase_summary = "\n".join([
-            f"- {phase}: {count}个测试用例"
+            f"- {get_chinese_phase_name(phase)}: {count}个测试用例"
             for phase, count in phase_counts.items()
         ])
 
-        message = f"""✅ **加载成功!**
+        progress(1.0, desc="加载完成!")
+
+        message = f"""**加载成功!**
 
 **Sheet概览:**
 {sheet_summary}
@@ -291,18 +334,19 @@ def get_suite_overview() -> gr.Blocks:
 def run_evaluation(
     phases: List[str],
     max_samples: int,
-    show_details: bool
+    show_details: bool,
+    progress: gr.Progress
 ) -> tuple:
     """执行评测。"""
     # 防重复提交检查
     if state.evaluation_in_progress:
-        return "⏳ 评测正在进行中，请稍候...", None, None, None
+        return "⏳ 评测正在进行中，请稍候...", None, None, None, None
 
     if state.test_suite is None:
-        return "❌ 请先上传测试套件", None, None, None
+        return "❌ 请先上传测试套件", None, None, None, None
 
     if not phases:
-        return "❌ 请至少选择一个阶段", None, None, None
+        return "❌ 请至少选择一个阶段", None, None, None, None
 
     # 获取锁
     with state.evaluation_lock:
@@ -310,76 +354,80 @@ def run_evaluation(
 
     try:
         # 过滤测试用例
-    filtered_cases = [
-        tc for tc in state.test_suite.test_cases
-        if tc.phase in phases
-    ][:max_samples]
+        filtered_cases = [
+            tc for tc in state.test_suite.test_cases
+            if tc.phase in phases
+        ][:max_samples]
 
-    if not filtered_cases:
-        return "❌ 没有找到匹配的测试用例", None, None, None
+        if not filtered_cases:
+            return "❌ 没有找到匹配的测试用例", None, None, None, None
 
-    # 执行评测
-    results = []
-    progress_data = []
+        # 执行评测
+        results = []
+        progress_data = []
 
-    for tc in filtered_cases:
-        score_result = simulate_evaluation(tc)
+        for i, tc in enumerate(filtered_cases):
+            # 更新进度
+            progress((i + 1) / len(filtered_cases), desc=f"正在评测: {tc.id}")
 
-        result = {
-            "test_case_id": tc.id,
-            "phase": tc.phase,
-            "description": tc.description[:50] + "...",
-            "passed": state.scoring_engine.is_passed(score_result.score),
-            "score": score_result.score,
-            "confidence": score_result.confidence,
-            "status": "✓ 通过" if score_result.score >= 0.8 else "✗ 失败",
-            "details": score_result.metadata
-        }
-        results.append(result)
-        progress_data.append(result)
+            score_result = simulate_evaluation(tc)
 
-    state.results = results
+            result = {
+                "test_case_id": tc.id,
+                "phase": get_chinese_phase_name(tc.phase),
+                "phase_key": tc.phase,
+                "description": tc.description[:50] + "..." if len(tc.description) > 50 else tc.description,
+                "passed": state.scoring_engine.is_passed(score_result.score),
+                "score": score_result.score,
+                "confidence": score_result.confidence,
+                "status": "通过" if state.scoring_engine.is_passed(score_result.score) else "失败",
+                "details": score_result.metadata
+            }
+            results.append(result)
+            progress_data.append(result)
 
-    # 计算统计
-    total = len(results)
-    passed = sum(1 for r in results if r["passed"])
-    failed = total - passed
-    pass_rate = (passed / total * 100) if total > 0 else 0
-    avg_score = sum(r["score"] for r in results) / total if total > 0 else 0
-    avg_confidence = sum(r["confidence"] for r in results) / total if total > 0 else 0
+        state.results = results
 
-    # 生成摘要
-    summary = f"""## 📈 评测完成
+        # 计算统计
+        total = len(results)
+        passed = sum(1 for r in results if r["passed"])
+        failed = total - passed
+        pass_rate = (passed / total * 100) if total > 0 else 0
+        avg_score = sum(r["score"] for r in results) / total if total > 0 else 0
+        avg_confidence = sum(r["confidence"] for r in results) / total if total > 0 else 0
+
+        # 生成摘要
+        summary = f"""**评测完成**
 
 | 指标 | 值 |
 |------|-----|
 | **总测试数** | {total} |
-| **通过** | {passed} ✅ |
-| **失败** | {failed} ❌ |
+| **通过** | {passed} |
+| **失败** | {failed} |
 | **通过率** | {pass_rate:.1f}% |
 | **平均分数** | {avg_score:.3f} |
 | **平均置信度** | {avg_confidence:.3f} |
 """
 
-    # 生成表格数据
-    table_data = pd.DataFrame(results)
+        # 生成表格数据
+        table_data = pd.DataFrame(results)
 
-    # 生成图表
-    score_chart = create_score_chart(results)
-    pass_rate_chart = create_pass_rate_chart(results)
-    confidence_chart = create_confidence_chart(results)
+        # 生成图表
+        score_chart = create_score_chart(results)
+        pass_rate_chart = create_pass_rate_chart(results)
+        confidence_chart = create_confidence_chart(results)
+
+        return (
+            summary,
+            table_data,
+            gr.Plot(value=score_chart),
+            gr.Plot(value=pass_rate_chart),
+            gr.Plot(value=confidence_chart)
+        )
 
     finally:
         # 释放锁
         state.evaluation_in_progress = False
-
-    return (
-        summary,
-        table_data,
-        gr.Plot(value=score_chart),
-        gr.Plot(value=pass_rate_chart),
-        gr.Plot(value=confidence_chart)
-    )
 
 
 def get_results_table() -> pd.DataFrame:
@@ -480,22 +528,23 @@ def create_app():
         title="AI Testing Benchmark",
         css="""
         .main-header { text-align: center; padding: 20px; }
-        .metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; }
+        .metric-card { background: #1a1a2e; padding: 20px; border-radius: 10px; color: white; }
         .success-box { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 8px; }
         .warning-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; }
         .error-box { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; }
+        .gradio-container { background: #f8f9fa; }
         """
     ) as app:
 
         # 页头
         gr.Markdown("""
-        # 🧪 AI Testing Benchmark
+        # AI Testing Benchmark
         ### 配置驱动的AI评测框架
         """, elem_classes="main-header")
 
         with gr.Tabs():
             # ==================== Tab 1: 上传测试套件 ====================
-            with gr.TabItem("📁 上传测试套件"):
+            with gr.TabItem("上传测试套件"):
                 gr.Markdown("### 上传XLSX测试套件文件")
 
                 with gr.Row():
@@ -505,10 +554,10 @@ def create_app():
                             file_types=[".xlsx", ".xls"],
                             file_count=1
                         )
-                        upload_btn = gr.Button("📤 加载测试套件", variant="primary")
+                        upload_btn = gr.Button("加载测试套件", variant="primary")
 
                     with gr.Column(scale=2):
-                        upload_output = gr.Markdown("❓ 请上传XLSX格式的测试套件文件")
+                        upload_output = gr.Markdown("请上传XLSX格式的测试套件文件")
 
                 upload_btn.click(
                     fn=parse_xlsx_file,
@@ -524,7 +573,7 @@ def create_app():
                     suite_overview = gr.Markdown("❌ 请先上传测试套件")
 
             # ==================== Tab 2: 执行评测 ====================
-            with gr.TabItem("⚙️ 执行评测"):
+            with gr.TabItem("执行评测"):
                 gr.Markdown("### 配置并执行评测")
 
                 with gr.Row():
@@ -547,12 +596,19 @@ def create_app():
                             step=1
                         )
 
-                        run_btn = gr.Button("🚀 开始评测", variant="primary", size="lg")
+                        run_btn = gr.Button("开始评测", variant="primary", size="lg")
 
                     with gr.Column(scale=2):
-                        eval_summary = gr.Markdown("📊 点击\"开始评测\"按钮执行测试")
+                        eval_summary = gr.Markdown("点击\"开始评测\"按钮执行测试")
 
-                gr.Markdown("### 📈 可视化结果")
+                # 运行评测按钮事件
+                run_btn.click(
+                    fn=run_evaluation,
+                    inputs=[phase_selector, max_samples],
+                    outputs=[eval_summary, results_table, score_chart, pass_rate_chart, confidence_chart]
+                )
+
+                gr.Markdown("### 可视化结果")
                 with gr.Row():
                     score_chart = gr.Plot(label="分数分析")
                     pass_rate_chart = gr.Plot(label="通过率分析")
@@ -560,7 +616,7 @@ def create_app():
                 confidence_chart = gr.Plot(label="置信度分析")
 
             # ==================== Tab 3: 结果详情 ====================
-            with gr.TabItem("🔍 结果详情"):
+            with gr.TabItem("结果详情"):
                 gr.Markdown("### 评测结果详情")
 
                 results_table = gr.DataFrame(
@@ -569,7 +625,7 @@ def create_app():
                     column_width="auto"
                 )
 
-                refresh_btn = gr.Button("🔄 刷新结果")
+                refresh_btn = gr.Button("刷新结果")
 
                 refresh_btn.click(
                     fn=get_results_table,
@@ -577,7 +633,7 @@ def create_app():
                 )
 
             # ==================== Tab 4: 报告导出 ====================
-            with gr.TabItem("📤 导出报告"):
+            with gr.TabItem("导出报告"):
                 gr.Markdown("### 导出评测报告")
 
                 with gr.Row():
@@ -597,7 +653,7 @@ def create_app():
                 )
 
             # ==================== Tab 5: 配置管理 ====================
-            with gr.TabItem("⚙️ 配置管理"):
+            with gr.TabItem("配置管理"):
                 gr.Markdown("### 评分配置管理")
 
                 gr.Markdown("#### 当前配置")
@@ -643,7 +699,7 @@ def create_app():
                 )
 
             # ==================== Tab 6: 使用帮助 ====================
-            with gr.TabItem("❓ 帮助"):
+            with gr.TabItem("帮助"):
                 gr.Markdown("""
                 # 使用指南
 
