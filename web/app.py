@@ -1,17 +1,20 @@
 """
 AI Testing Benchmark - Web界面
 
-基于Streamlit的图形化评测界面。
+基于Gradio的现代化图形化评测界面。
 """
 
-import streamlit as st
+import gradio as gr
 import pandas as pd
 import json
 import yaml
-from pathlib import Path
-from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, List, Any, Optional
+import random
 
 # 添加项目路径
 import sys
@@ -21,330 +24,165 @@ from ai_testing_benchmark.core.test_suite_loader import (
     TestSuiteLoader,
     load_test_suite,
     LoadedTestSuite,
+    TestCase,
+    Scenario,
     SheetType
 )
 from ai_testing_benchmark.core.scoring_engine import (
     ScoringEngine,
     ScoreResult,
-    ConfidenceLevel
-)
-from ai_testing_benchmark.core.config import BenchmarkConfig, ConfigLoader
-
-# 页面配置
-st.set_page_config(
-    page_title="AI Testing Benchmark",
-    page_icon="🧪",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    ConfidenceLevel,
+    ScoreAggregationMethod
 )
 
-# 自定义CSS
-st.markdown("""
-<style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-bottom: 1rem;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        color: #34495e;
-        margin-bottom: 0.5rem;
-    }
-    .metric-card {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 1rem;
-        text-align: center;
-    }
-    .pass { color: #27ae60; }
-    .fail { color: #e74c3c; }
-    .warning { color: #f39c12; }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        padding: 10px 20px;
-    }
-</style>
-""", unsafe_allow_html=True)
+# 全局状态
+class AppState:
+    """应用状态管理。"""
+    test_suite: Optional[LoadedTestSuite] = None
+    results: List[Dict] = []
+    scoring_engine: ScoringEngine = None
+
+    def reset(self):
+        self.test_suite = None
+        self.results = []
+        self.scoring_engine = ScoringEngine()
+
+state = AppState()
 
 
-# 会话状态初始化
-def init_session_state():
-    """初始化会话状态。"""
-    if "test_suite" not in st.session_state:
-        st.session_state.test_suite = None
-    if "results" not in st.session_state:
-        st.session_state.results = {}
-    if "config" not in st.session_state:
-        st.session_state.config = None
-    if "scoring_engine" not in st.session_state:
-        st.session_state.scoring_engine = None
+# ==================== 工具函数 ====================
+
+def create_score_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
+    """创建分数分布图。"""
+    if not results:
+        return go.Figure()
+
+    scores = [r["score"] for r in results]
+    phases = [r["phase"] for r in results]
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=("分数分布", "各阶段分数"),
+        specs=[[{"type": "histogram"}, {"type": "bar"}]]
+    )
+
+    # 分数分布直方图
+    fig.add_trace(
+        go.Histogram(x=scores, name="分数", nbinsx=10, marker_color="#3498db"),
+        row=1, col=1
+    )
+
+    # 各阶段平均分数
+    phase_scores = {}
+    for r in results:
+        phase = r["phase"]
+        if phase not in phase_scores:
+            phase_scores[phase] = []
+        phase_scores[phase].append(r["score"])
+
+    phase_avg = {k: sum(v) / len(v) for k, v in phase_scores.items()}
+    phases = list(phase_avg.keys())
+    avg_scores = list(phase_avg.values())
+
+    colors = ["#27ae60" if s >= 0.8 else "#f39c12" if s >= 0.6 else "#e74c3c" for s in avg_scores]
+
+    fig.add_trace(
+        go.Bar(x=phases, y=avg_scores, name="平均分", marker_color=colors),
+        row=1, col=2
+    )
+
+    fig.update_layout(height=400, showlegend=False, title_text="评测结果分析")
+    return fig
 
 
-init_session_state()
+def create_pass_rate_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
+    """创建通过率图表。"""
+    if not results:
+        return go.Figure()
+
+    passed = sum(1 for r in results if r["passed"])
+    failed = len(results) - passed
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=("总体通过率", "各阶段通过率"),
+        specs=[[{"type": "pie"}, {"type": "bar"}]]
+    )
+
+    # 饼图
+    fig.add_trace(
+        go.Pie(
+            labels=["通过", "失败"],
+            values=[passed, failed],
+            marker_colors=["#27ae60", "#e74c3c"],
+            textinfo="label+percent"
+        ),
+        row=1, col=1
+    )
+
+    # 各阶段通过率
+    phase_stats = {}
+    for r in results:
+        phase = r["phase"]
+        if phase not in phase_stats:
+            phase_stats[phase] = {"total": 0, "passed": 0}
+        phase_stats[phase]["total"] += 1
+        phase_stats[phase]["passed"] += 1 if r["passed"] else 0
+
+    phases = list(phase_stats.keys())
+    pass_rates = [
+        (phase_stats[p]["passed"] / phase_stats[p]["total"] * 100)
+        if phase_stats[p]["total"] > 0 else 0
+        for p in phases
+    ]
+
+    colors = ["#27ae60" if r >= 80 else "#f39c12" if r >= 60 else "#e74c3c" for r in pass_rates]
+
+    fig.add_trace(
+        go.Bar(x=phases, y=pass_rates, name="通过率%", marker_color=colors),
+        row=1, col=2
+    )
+
+    fig.update_layout(height=400, showlegend=False, title_text="通过率分析")
+    return fig
 
 
-# 侧边栏
-def render_sidebar():
-    """渲染侧边栏。"""
-    with st.sidebar:
-        st.title("🧪 配置")
+def create_confidence_chart(results: List[Dict]) -> plotly.graph_objects.Figure:
+    """创建置信度分析图。"""
+    if not results:
+        return go.Figure()
 
-        # 模型配置
-        st.subheader("模型设置")
-        model_name = st.selectbox(
-            "模型",
-            ["gpt-4", "gpt-3.5-turbo", "claude-3-opus", "claude-3-sonnet", "custom"],
-            index=0
-        )
-        provider = st.selectbox(
-            "提供商",
-            ["openai", "anthropic", "azure", "custom"],
-            index=0
-        )
+    confidences = [r["confidence"] for r in results]
+    scores = [r["score"] for r in results]
 
-        # 评分配置
-        st.subheader("评分设置")
-        scoring_config_path = st.text_input(
-            "评分配置文件",
-            placeholder="可选，YAML/JSON格式"
-        )
+    fig = go.Figure()
 
-        if scoring_config_path and Path(scoring_config_path).exists():
-            st.session_state.scoring_engine = ScoringEngine(scoring_config_path)
-            st.success("✓ 评分配置已加载")
-        else:
-            st.session_state.scoring_engine = ScoringEngine()
-            st.info("使用默认评分配置")
+    fig.add_trace(go.Scatter(
+        x=scores,
+        y=confidences,
+        mode="markers",
+        marker=dict(
+            size=12,
+            color=scores,
+            colorscale="RdYlGn",
+            showscale=True
+        ),
+        text=[f"Phase: {r['phase']}<br>Score: {r['score']:.3f}<br>Confidence: {r['confidence']:.3f}"
+              for r in results],
+        hoverinfo="text"
+    ))
 
-        # 阈值设置
-        st.subheader("阈值设置")
-        pass_threshold = st.slider(
-            "通过阈值",
-            0.0, 1.0,
-            st.session_state.scoring_engine.config.pass_threshold,
-            0.05
-        )
-        critical_threshold = st.slider(
-            "危险阈值",
-            0.0, 1.0,
-            st.session_state.scoring_engine.config.critical_threshold,
-            0.05
-        )
-
-        # 高级选项
-        with st.expander("高级选项"):
-            early_stopping = st.checkbox("首次失败停止", value=False)
-            include_raw = st.checkbox("包含原始输出", value=True)
-            verbose = st.checkbox("详细日志", value=False)
-
-        st.divider()
-
-        # 关于
-        st.caption("AI Testing Benchmark v2.0")
-        st.caption("基于配置驱动的AI评测框架")
+    fig.update_layout(
+        height=400,
+        title="分数-置信度关系图",
+        xaxis_title="分数",
+        yaxis_title="置信度"
+    )
+    return fig
 
 
-def render_upload_section():
-    """渲染文件上传区域。"""
-    st.subheader("📁 上传测试套件")
-
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        uploaded_file = st.file_uploader(
-            "选择XLSX文件",
-            type=["xlsx", "xls"],
-            help="支持多Sheet的XLSX格式测试套件"
-        )
-
-    with col2:
-        st.write("　")
-        if uploaded_file is not None:
-            st.success(f"已上传: {uploaded_file.name}")
-
-    if uploaded_file is not None:
-        # 保存上传的文件
-        temp_dir = Path("temp")
-        temp_dir.mkdir(exist_ok=True)
-        temp_path = temp_dir / uploaded_file.name
-
-        with open(temp_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-
-        # 加载并显示Sheet信息
-        loader = TestSuiteLoader()
-        try:
-            sheet_info = loader.get_sheet_info(str(temp_path))
-
-            st.write("**检测到的Sheet:**")
-            for info in sheet_info:
-                with st.expander(f"📋 {info['name']} ({info['type']})"):
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("行数", info["rows"])
-                    col2.metric("列数", info["columns"])
-                    col3.metric("类型", info["type"])
-
-                    if info["headers"]:
-                        st.write("**表头:**")
-                        st.write(", ".join(str(h) for h in info["headers"] if h))
-
-            # 加载测试套件
-            if st.button("加载测试套件", type="primary"):
-                with st.spinner("正在加载..."):
-                    suite = loader.load_from_xlsx(str(temp_path))
-                    st.session_state.test_suite = suite
-
-                    st.success(f"✓ 加载成功!")
-                    st.info(f"包含 {len(suite.test_cases)} 个测试用例, {len(suite.scenarios)} 个场景")
-
-        except Exception as e:
-            st.error(f"加载失败: {str(e)}")
-
-
-def render_test_suite_overview():
-    """渲染测试套件概览。"""
-    if st.session_state.test_suite is None:
-        st.info("请先上传测试套件")
-        return
-
-    suite = st.session_state.test_suite
-
-    st.subheader("📊 测试套件概览")
-
-    # 基本信息
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("名称", suite.name)
-    col2.metric("版本", suite.version)
-    col3.metric("测试用例", len(suite.test_cases))
-    col4.metric("场景", len(suite.scenarios))
-
-    # 测试用例预览
-    st.subheader("📝 测试用例预览")
-
-    # 按阶段分组统计
-    phase_counts = {}
-    for tc in suite.test_cases:
-        phase = tc.phase
-        phase_counts[phase] = phase_counts.get(phase, 0) + 1
-
-    if phase_counts:
-        col1, col2 = st.columns([1, 1])
-
-        with col1:
-            fig = px.pie(
-                values=list(phase_counts.values()),
-                names=list(phase_counts.keys()),
-                title="测试用例分布(按阶段)"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        with col2:
-            df = pd.DataFrame({
-                "阶段": list(phase_counts.keys()),
-                "数量": list(phase_counts.values())
-            })
-            fig = px.bar(
-                df,
-                x="阶段",
-                y="数量",
-                title="测试用例数量(按阶段)"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-    # 测试用例列表
-    with st.expander("查看测试用例列表"):
-        df_cases = pd.DataFrame([
-            {
-                "ID": tc.id,
-                "场景": tc.scenario_id,
-                "阶段": tc.phase,
-                "描述": tc.description[:50] + "..." if len(tc.description) > 50 else tc.description,
-                "优先级": tc.priority,
-                "标签": ", ".join(tc.tags)
-            }
-            for tc in suite.test_cases
-        ])
-        st.dataframe(df_cases, use_container_width=True, hide_index=True)
-
-
-def render_test_execution():
-    """渲染测试执行区域。"""
-    if st.session_state.test_suite is None:
-        st.info("请先上传测试套件")
-        return
-
-    st.subheader("⚙️ 执行评测")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        selected_phases = st.multiselect(
-            "选择阶段",
-            list(set(tc.phase for tc in st.session_state.test_suite.test_cases)),
-            default=list(set(tc.phase for tc in st.session_state.test_suite.test_cases))
-        )
-
-    with col2:
-        max_samples = st.number_input("最大样本数", 1, 1000, 100)
-
-    with col3:
-        show_details = st.checkbox("显示详情", value=True)
-
-    if st.button("开始评测", type="primary"):
-        if not selected_phases:
-            st.warning("请至少选择一个阶段")
-            return
-
-        # 过滤测试用例
-        filtered_cases = [
-            tc for tc in st.session_state.test_suite.test_cases
-            if tc.phase in selected_phases
-        ][:max_samples]
-
-        st.info(f"将执行 {len(filtered_cases)} 个测试用例")
-
-        # 执行评测
-        progress_bar = st.progress(0)
-        results = []
-
-        for i, tc in enumerate(filtered_cases):
-            # 模拟评测过程
-            # 实际使用时这里会调用真实的AI模型进行评测
-            score_result = simulate_evaluation(tc)
-
-            results.append({
-                "test_case_id": tc.id,
-                "phase": tc.phase,
-                "passed": st.session_state.scoring_engine.is_passed(score_result.score),
-                "score": score_result.score,
-                "confidence": score_result.confidence,
-                "details": score_result.metadata
-            })
-
-            progress_bar.progress((i + 1) / len(filtered_cases))
-
-        # 保存结果
-        st.session_state.results = results
-
-        st.success(f"✓ 评测完成! 处理了 {len(results)} 个测试用例")
-
-        # 显示结果统计
-        render_results_summary(results)
-
-
-def simulate_evaluation(tc) -> ScoreResult:
-    """
-    模拟评测过程。
-
-    实际使用时替换为真实的AI模型调用。
-    """
-    import random
-
-    # 模拟分数
+def simulate_evaluation(tc: TestCase) -> ScoreResult:
+    """模拟评测。"""
     base_score = random.uniform(0.6, 0.95)
     confidence = random.uniform(0.7, 0.95)
 
@@ -357,438 +195,503 @@ def simulate_evaluation(tc) -> ScoreResult:
     )
 
 
-def render_results_summary(results: list):
-    """渲染结果汇总。"""
-    st.subheader("📈 评测结果汇总")
+def parse_xlsx_file(file_obj) -> Dict[str, Any]:
+    """解析上传的XLSX文件。"""
+    if file_obj is None:
+        return {"success": False, "message": "请上传文件"}
+
+    try:
+        # 保存上传的文件
+        temp_dir = Path("temp")
+        temp_dir.mkdir(exist_ok=True)
+        temp_path = temp_dir / file_obj.name
+
+        with open(temp_path, "wb") as f:
+            f.write(file_obj.read())
+
+        # 加载测试套件
+        loader = TestSuiteLoader()
+        state.test_suite = loader.load_from_xlsx(str(temp_path))
+
+        # 获取Sheet信息
+        sheet_info = loader.get_sheet_info(str(temp_path))
+
+        # 统计信息
+        phase_counts = {}
+        for tc in state.test_suite.test_cases:
+            phase = tc.phase
+            phase_counts[phase] = phase_counts.get(phase, 0) + 1
+
+        sheet_summary = "\n".join([
+            f"- **{info['name']}** ({info['type']}): {info['rows']}行 x {info['columns']}列"
+            for info in sheet_info
+        ])
+
+        phase_summary = "\n".join([
+            f"- {phase}: {count}个测试用例"
+            for phase, count in phase_counts.items()
+        ])
+
+        message = f"""✅ **加载成功!**
+
+**Sheet概览:**
+{sheet_summary}
+
+**测试用例统计:**
+{phase_summary}
+
+**总计:** {len(state.test_suite.test_cases)}个测试用例, {len(state.test_suite.scenarios)}个场景
+"""
+        return {"success": True, "message": message}
+
+    except Exception as e:
+        return {"success": False, "message": f"加载失败: {str(e)}"}
+
+
+def get_suite_overview() -> gr.Blocks:
+    """生成测试套件概览组件。"""
+    if state.test_suite is None:
+        return gr.Markdown("❌ 请先上传测试套件")
+
+    suite = state.test_suite
+
+    md = f"""
+## 📊 测试套件概览
+
+| 属性 | 值 |
+|------|-----|
+| **名称** | {suite.name} |
+| **版本** | {suite.version} |
+| **测试用例** | {len(suite.test_cases)} |
+| **场景数** | {len(suite.scenarios)} |
+
+### 测试用例列表
+"""
+
+    # 按阶段分组
+    phase_cases = {}
+    for tc in suite.test_cases:
+        if tc.phase not in phase_cases:
+            phase_cases[tc.phase] = []
+        phase_cases[tc.phase].append(tc)
+
+    for phase, cases in phase_cases.items():
+        md += f"\n#### {phase} ({len(cases)}个)\n"
+        for tc in cases:
+            priority_emoji = "🔴" if tc.priority == "P0" else "🟡" if tc.priority == "P1" else "🟢"
+            md += f"- {priority_emoji} `{tc.id}`: {tc.description[:60]}...\n"
+
+    return gr.Markdown(md)
+
+
+def run_evaluation(
+    phases: List[str],
+    max_samples: int,
+    show_details: bool
+) -> tuple:
+    """执行评测。"""
+    if state.test_suite is None:
+        return "❌ 请先上传测试套件", None, None, None
+
+    if not phases:
+        return "❌ 请至少选择一个阶段", None, None, None
+
+    # 过滤测试用例
+    filtered_cases = [
+        tc for tc in state.test_suite.test_cases
+        if tc.phase in phases
+    ][:max_samples]
+
+    if not filtered_cases:
+        return "❌ 没有找到匹配的测试用例", None, None, None
+
+    # 执行评测
+    results = []
+    progress_data = []
+
+    for tc in filtered_cases:
+        score_result = simulate_evaluation(tc)
+
+        result = {
+            "test_case_id": tc.id,
+            "phase": tc.phase,
+            "description": tc.description[:50] + "...",
+            "passed": state.scoring_engine.is_passed(score_result.score),
+            "score": score_result.score,
+            "confidence": score_result.confidence,
+            "status": "✓ 通过" if score_result.score >= 0.8 else "✗ 失败",
+            "details": score_result.metadata
+        }
+        results.append(result)
+        progress_data.append(result)
+
+    state.results = results
 
     # 计算统计
     total = len(results)
     passed = sum(1 for r in results if r["passed"])
     failed = total - passed
     pass_rate = (passed / total * 100) if total > 0 else 0
-
     avg_score = sum(r["score"] for r in results) / total if total > 0 else 0
     avg_confidence = sum(r["confidence"] for r in results) / total if total > 0 else 0
 
-    # 显示指标卡片
-    col1, col2, col3, col4, col5 = st.columns(5)
+    # 生成摘要
+    summary = f"""## 📈 评测完成
 
-    with col1:
-        st.metric("总测试数", total)
-    with col2:
-        st.metric("通过", passed, delta=f"+{passed}")
-    with col3:
-        st.metric("失败", failed, delta=f"-{failed}")
-    with col4:
-        st.metric("通过率", f"{pass_rate:.1f}%",
-                  delta="✓" if pass_rate >= 80 else "✗")
-    with col5:
-        st.metric("平均分数", f"{avg_score:.2f}")
+| 指标 | 值 |
+|------|-----|
+| **总测试数** | {total} |
+| **通过** | {passed} ✅ |
+| **失败** | {failed} ❌ |
+| **通过率** | {pass_rate:.1f}% |
+| **平均分数** | {avg_score:.3f} |
+| **平均置信度** | {avg_confidence:.3f} |
+"""
 
-    # 按阶段分析
-    phase_results = {}
-    for r in results:
-        phase = r["phase"]
-        if phase not in phase_results:
-            phase_results[phase] = {"total": 0, "passed": 0, "scores": []}
-        phase_results[phase]["total"] += 1
-        phase_results[phase]["passed"] += 1 if r["passed"] else 0
-        phase_results[phase]["scores"].append(r["score"])
+    # 生成表格数据
+    table_data = pd.DataFrame(results)
 
-    # 阶段结果表格
-    st.write("**按阶段结果:**")
-    phase_data = []
-    for phase, data in phase_results.items():
-        phase_pass_rate = (data["passed"] / data["total"] * 100) if data["total"] > 0 else 0
-        phase_avg_score = sum(data["scores"]) / len(data["scores"]) if data["scores"] else 0
+    # 生成图表
+    score_chart = create_score_chart(results)
+    pass_rate_chart = create_pass_rate_chart(results)
+    confidence_chart = create_confidence_chart(results)
 
-        phase_data.append({
-            "阶段": phase,
-            "总数": data["total"],
-            "通过": data["passed"],
-            "失败": data["total"] - data["passed"],
-            "通过率": f"{phase_pass_rate:.1f}%",
-            "平均分": f"{phase_avg_score:.3f}",
-            "状态": "✓ 通过" if phase_pass_rate >= 80 else "✗ 未通过"
-        })
-
-    df_phase = pd.DataFrame(phase_data)
-    st.dataframe(df_phase, use_container_width=True, hide_index=True)
-
-    # 可视化
-    col1, col2 = st.columns(2)
-
-    with col1:
-        fig = px.bar(
-            df_phase,
-            x="阶段",
-            y="平均分",
-            color="状态",
-            title="各阶段平均分数",
-            color_discrete_map={"✓ 通过": "#27ae60", "✗ 未通过": "#e74c3c"}
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=list(phase_results.keys()),
-            y=[sum(p["scores"]) / len(p["scores"]) for p in phase_results.values()],
-            mode="lines+markers",
-            name="平均分"
-        ))
-        fig.add_trace(go.Scatter(
-            x=list(phase_results.keys()),
-            y=[p["passed"] / p["total"] * 100 if p["total"] > 0 else 0 for p in phase_results.values()],
-            mode="lines+markers",
-            name="通过率%"
-        ))
-        fig.update_layout(title="分数与通过率趋势", xaxis_title="阶段")
-        st.plotly_chart(fig, use_container_width=True)
+    return (
+        summary,
+        table_data,
+        gr.Plot(value=score_chart),
+        gr.Plot(value=pass_rate_chart),
+        gr.Plot(value=confidence_chart)
+    )
 
 
-def render_configuration_editor():
-    """渲染配置编辑器。"""
-    st.subheader("⚙️ 评分配置管理")
+def get_results_table() -> pd.DataFrame:
+    """获取结果表格。"""
+    if not state.results:
+        return pd.DataFrame()
+    return pd.DataFrame(state.results)
 
-    tabs = st.tabs(["查看配置", "编辑配置", "保存/加载"])
 
-    with tabs[0]:
-        if st.session_state.scoring_engine:
-            config = st.session_state.scoring_engine.config
+def export_report(format: str) -> str:
+    """导出报告。"""
+    if not state.results:
+        return "❌ 没有可导出的结果"
 
-            st.write("**通过阈值:**")
-            st.json({"pass_threshold": config.pass_threshold,
-                     "critical_threshold": config.critical_threshold})
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"benchmark_report_{timestamp}.{format.lower()}"
 
-            st.write("**阶段权重:**")
-            st.json(config.phase_weights)
+    if format == "JSON":
+        report_data = {
+            "test_suite": {
+                "name": state.test_suite.name if state.test_suite else "N/A",
+                "version": state.test_suite.version if state.test_suite else "N/A"
+            },
+            "results": state.results,
+            "summary": {
+                "total": len(state.results),
+                "passed": sum(1 for r in state.results if r["passed"]),
+                "avg_score": sum(r["score"] for r in state.results) / len(state.results)
+            },
+            "generated_at": timestamp
+        }
+        content = json.dumps(report_data, indent=2, ensure_ascii=False)
 
-            st.write("**置信度配置:**")
-            st.json({
-                "levels": config.confidence.levels,
-                "calculation_method": config.confidence.calculation_method
-            })
+    elif format == "YAML":
+        report_data = {
+            "test_suite": {
+                "name": state.test_suite.name if state.test_suite else "N/A",
+                "version": state.test_suite.version if state.test_suite else "N/A"
+            },
+            "results": state.results,
+            "generated_at": timestamp
+        }
+        content = yaml.dump(report_data, allow_unicode=True)
 
-            st.write("**评分公式:**")
-            for name, formula in config.formulas.items():
-                with st.expander(f"公式: {name}"):
-                    st.json({
-                        "type": formula.type,
-                        "weights": formula.weights,
-                        "thresholds": formula.thresholds,
-                        "aggregation": formula.aggregation.value
-                    })
+    elif format == "CSV":
+        df = pd.DataFrame(state.results)
+        content = df.to_csv(index=False)
 
-    with tabs[1]:
-        st.write("**编辑评分公式权重:**")
+    else:
+        return "❌ 不支持的格式"
 
-        formula_name = st.selectbox(
-            "选择公式",
-            list(st.session_state.scoring_engine.config.formulas.keys())
-        )
+    # 保存文件
+    output_path = Path("exports")
+    output_path.mkdir(exist_ok=True)
+    file_path = output_path / filename
 
-        if formula_name:
-            formula = st.session_state.scoring_engine.config.formulas[formula_name]
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
 
-            st.write(f"**类型:** {formula.type}")
+    return f"✅ 报告已导出: `{filename}`"
 
-            st.write("**权重:**")
-            new_weights = {}
-            for key, value in formula.weights.items():
-                new_weights[key] = st.slider(
-                    f"权重 - {key}",
-                    0.0, 1.0, value, 0.1
+
+def get_config_editor() -> Dict[str, Any]:
+    """获取配置编辑器数据。"""
+    config = state.scoring_engine.config
+
+    return {
+        "pass_threshold": config.pass_threshold,
+        "critical_threshold": config.critical_threshold,
+        "phase_weights": config.phase_weights,
+        "confidence_levels": config.confidence.levels,
+        "formulas": {
+            name: {
+                "type": formula.type,
+                "weights": formula.weights,
+                "thresholds": formula.thresholds
+            }
+            for name, formula in config.formulas.items()
+        }
+    }
+
+
+# ==================== 界面布局 ====================
+
+def create_app():
+    """创建Gradio应用。"""
+
+    # 主题设置
+    theme = gr.themes.Soft(
+        primary_hue="blue",
+        secondary_hue="green",
+        neutral_hue="gray",
+        font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui"]
+    )
+
+    with gr.Blocks(
+        theme=theme,
+        title="AI Testing Benchmark",
+        css="""
+        .main-header { text-align: center; padding: 20px; }
+        .metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; }
+        .success-box { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 8px; }
+        .warning-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; }
+        .error-box { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; }
+        """
+    ) as app:
+
+        # 页头
+        gr.Markdown("""
+        # 🧪 AI Testing Benchmark
+        ### 配置驱动的AI评测框架
+        """, elem_classes="main-header")
+
+        with gr.Tabs():
+            # ==================== Tab 1: 上传测试套件 ====================
+            with gr.TabItem("📁 上传测试套件"):
+                gr.Markdown("### 上传XLSX测试套件文件")
+
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        file_input = gr.File(
+                            label="选择XLSX文件",
+                            file_types=[".xlsx", ".xls"],
+                            file_count=1
+                        )
+                        upload_btn = gr.Button("📤 加载测试套件", variant="primary")
+
+                    with gr.Column(scale=2):
+                        upload_output = gr.Markdown("❓ 请上传XLSX格式的测试套件文件")
+
+                upload_btn.click(
+                    fn=parse_xlsx_file,
+                    inputs=[file_input],
+                    outputs=[upload_output]
                 )
 
-            st.write("**阈值:**")
-            new_pass_threshold = st.slider(
-                "Pass阈值",
-                0.0, 1.0, formula.thresholds.get("pass", 0.8), 0.05
-            )
+                gr.Markdown("---")
+                gr.Markdown("### 📋 Sheet预览")
+                sheet_preview = gr.DataFrame(headers=["名称", "类型", "行数", "列数"])
 
-            if st.button("应用更改"):
-                formula.weights = new_weights
-                formula.thresholds["pass"] = new_pass_threshold
-                st.success("✓ 配置已更新")
+                with gr.Row():
+                    suite_overview = gr.Markdown("❌ 请先上传测试套件")
 
-    with tabs[2]:
-        col1, col2 = st.columns(2)
+            # ==================== Tab 2: 执行评测 ====================
+            with gr.TabItem("⚙️ 执行评测"):
+                gr.Markdown("### 配置并执行评测")
 
-        with col1:
-            st.write("**保存配置:**")
-            save_path = st.text_input("保存路径", "scoring_config.yaml")
-            if st.button("保存"):
-                st.session_state.scoring_engine.save_config(save_path)
-                st.success(f"✓ 配置已保存至: {save_path}")
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        phase_selector = gr.Dropdown(
+                            label="选择阶段",
+                            choices=["resource_import", "inventory_confirmation",
+                                    "resource_summary", "grouping_architecture",
+                                    "cloud_strategy", "spec_recommendation",
+                                    "compatibility", "report_generation"],
+                            multiselect=True,
+                            value=["resource_import", "cloud_strategy"]
+                        )
 
-        with col2:
-            st.write("**加载配置:**")
-            load_path = st.text_input("加载路径")
-            if st.button("加载") and load_path:
-                st.session_state.scoring_engine = ScoringEngine(load_path)
-                st.success("✓ 配置已加载")
+                        max_samples = gr.Slider(
+                            label="最大样本数",
+                            minimum=1,
+                            maximum=500,
+                            value=50,
+                            step=1
+                        )
 
+                        run_btn = gr.Button("🚀 开始评测", variant="primary", size="lg")
 
-def render_results_detail():
-    """渲染详细结果。"""
-    if not st.session_state.results:
-        st.info("暂无评测结果")
-        return
+                    with gr.Column(scale=2):
+                        eval_summary = gr.Markdown("📊 点击\"开始评测\"按钮执行测试")
 
-    st.subheader("🔍 详细结果")
+                gr.Markdown("### 📈 可视化结果")
+                with gr.Row():
+                    score_chart = gr.Plot(label="分数分析")
+                    pass_rate_chart = gr.Plot(label="通过率分析")
 
-    results = st.session_state.results
+                confidence_chart = gr.Plot(label="置信度分析")
 
-    # 筛选器
-    col1, col2, col3 = st.columns(3)
+            # ==================== Tab 3: 结果详情 ====================
+            with gr.TabItem("🔍 结果详情"):
+                gr.Markdown("### 评测结果详情")
 
-    with col1:
-        filter_status = st.multiselect(
-            "状态筛选",
-            ["通过", "失败"],
-            default=["通过", "失败"]
-        )
+                results_table = gr.DataFrame(
+                    label="测试结果",
+                    wrap=True,
+                    column_width="auto"
+                )
 
-    with col2:
-        filter_phase = st.multiselect(
-            "阶段筛选",
-            list(set(r["phase"] for r in results)),
-            default=list(set(r["phase"] for r in results))
-        )
+                refresh_btn = gr.Button("🔄 刷新结果")
 
-    with col3:
-        sort_by = st.selectbox(
-            "排序",
-            ["分数(升序)", "分数(降序)", "阶段"]
-        )
+                refresh_btn.click(
+                    fn=get_results_table,
+                    outputs=[results_table]
+                )
 
-    # 筛选结果
-    filtered = [
-        r for r in results
-        if ("通过" in filter_status if r["passed"] else "失败" in filter_status)
-        and r["phase"] in filter_phase
-    ]
+            # ==================== Tab 4: 报告导出 ====================
+            with gr.TabItem("📤 导出报告"):
+                gr.Markdown("### 导出评测报告")
 
-    # 排序
-    if sort_by == "分数(升序)":
-        filtered.sort(key=lambda x: x["score"])
-    elif sort_by == "分数(降序)":
-        filtered.sort(key=lambda x: x["score"], reverse=True)
-    else:
-        filtered.sort(key=lambda x: x["phase"])
+                with gr.Row():
+                    export_format = gr.Radio(
+                        choices=["JSON", "YAML", "CSV"],
+                        value="JSON",
+                        label="导出格式"
+                    )
+                    export_btn = gr.Button("📥 导出报告", variant="primary")
 
-    # 显示列表
-    for r in filtered:
-        phase = r["phase"]
-        status = "✓" if r["passed"] else "✗"
-        status_color = "green" if r["passed"] else "red"
+                export_output = gr.Textbox(label="导出结果", lines=3)
 
-        with st.expander(f"`{status}` {r['test_case_id']} | {phase} | 分数: {r['score']:.3f}"):
-            col1, col2, col3 = st.columns(3)
-            col1.metric("分数", f"{r['score']:.3f}")
-            col2.metric("置信度", f"{r['confidence']:.3f}")
-            col3.metric("状态", "通过" if r["passed"] else "失败")
+                export_btn.click(
+                    fn=export_report,
+                    inputs=[export_format],
+                    outputs=[export_output]
+                )
 
-            if r.get("details"):
-                st.json(r["details"])
+            # ==================== Tab 5: 配置管理 ====================
+            with gr.TabItem("⚙️ 配置管理"):
+                gr.Markdown("### 评分配置管理")
 
+                gr.Markdown("#### 当前配置")
 
-def render_export():
-    """渲染导出功能。"""
-    st.subheader("📤 导出报告")
+                config_json = gr.JSON(label="评分配置")
 
-    if not st.session_state.results and not st.session_state.test_suite:
-        st.info("暂无数据可导出")
-        return
+                gr.Markdown("""
+                ### 配置说明
 
-    col1, col2 = st.columns(2)
+                所有评分配置均可通过YAML文件管理：
 
-    with col1:
-        export_format = st.selectbox(
-            "导出格式",
-            ["JSON", "YAML", "CSV", "HTML"]
-        )
+                ```yaml
+                formulas:
+                  accuracy:
+                    type: accuracy
+                    thresholds:
+                      pass: 0.80
+                      warning: 0.70
 
-    with col2:
-        include_details = st.checkbox("包含详情", value=True)
+                confidence:
+                  levels:
+                    high: 0.90
+                    medium: 0.70
+                    low: 0.50
 
-    if st.button("生成报告"):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                phase_weights:
+                  foundation: 0.20
+                  dialogue: 0.20
+                  migration: 0.25
+                ```
 
-        if export_format == "JSON":
-            report_data = {
-                "test_suite": {
-                    "name": st.session_state.test_suite.name if st.session_state.test_suite else "N/A",
-                    "version": st.session_state.test_suite.version if st.session_state.test_suite else "N/A",
-                    "test_case_count": len(st.session_state.test_suite.test_cases) if st.session_state.test_suite else 0
-                },
-                "results": st.session_state.results,
-                "generated_at": timestamp
-            }
-            report_str = json.dumps(report_data, indent=2, ensure_ascii=False)
-            filename = f"benchmark_report_{timestamp}.json"
+                **支持的配置项:**
+                - `formulas`: 评分公式及其权重
+                - `confidence`: 置信度等级和计算方法
+                - `phase_weights`: 各阶段权重
+                - `pass_threshold`: 通过阈值
+                - `critical_threshold`: 危险阈值
+                """)
 
-        elif export_format == "YAML":
-            report_data = {
-                "test_suite": {
-                    "name": st.session_state.test_suite.name if st.session_state.test_suite else "N/A",
-                    "version": st.session_state.test_suite.version if st.session_state.test_suite else "N/A"
-                },
-                "results": st.session_state.results,
-                "generated_at": timestamp
-            }
-            report_str = yaml.dump(report_data, allow_unicode=True)
-            filename = f"benchmark_report_{timestamp}.yaml"
+                config_json.change(
+                    fn=get_config_editor,
+                    outputs=[config_json]
+                )
 
-        elif export_format == "CSV":
-            if st.session_state.results:
-                df = pd.DataFrame(st.session_state.results)
-                report_str = df.to_csv(index=False)
-            else:
-                report_str = ""
-            filename = f"benchmark_report_{timestamp}.csv"
+            # ==================== Tab 6: 使用帮助 ====================
+            with gr.TabItem("❓ 帮助"):
+                gr.Markdown("""
+                # 使用指南
 
-        else:  # HTML
-            report_str = generate_html_report()
-            filename = f"benchmark_report_{timestamp}.html"
+                ## 1. 上传测试套件
+                - 点击"选择文件"上传XLSX格式的测试套件
+                - 支持多Sheet的Excel文件
+                - Sheet类型: `test_cases`, `scenarios`, `config`
 
-        if report_str:
-            st.download_button(
-                label=f"下载 {export_format} 报告",
-                data=report_str,
-                file_name=filename,
-                mime=get_mime_type(export_format)
-            )
+                ## 2. 执行评测
+                - 选择要评测的阶段
+                - 设置最大样本数
+                - 点击"开始评测"
 
+                ## 3. 查看结果
+                - 查看分数分布和通过率图表
+                - 查看详细的测试结果表格
+                - 支持筛选和排序
 
-def generate_html_report() -> str:
-    """生成HTML报告。"""
-    results = st.session_state.results
-    total = len(results)
-    passed = sum(1 for r in results if r["passed"])
-    pass_rate = (passed / total * 100) if total > 0 else 0
+                ## 4. 导出报告
+                - 支持JSON/YAML/CSV格式
+                - 包含完整的评测结果和统计
 
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>AI Testing Benchmark Report</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 40px; }}
-            .header {{ background: #2c3e50; color: white; padding: 20px; border-radius: 8px; }}
-            .metric {{ display: inline-block; margin: 10px; padding: 15px; background: #ecf0f1; border-radius: 8px; }}
-            .pass {{ color: #27ae60; }}
-            .fail {{ color: #e74c3c; }}
-            table {{ border-collapse: collapse; width: 100%; }}
-            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-            th {{ background-color: #2c3e50; color: white; }}
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1>AI Testing Benchmark Report</h1>
-            <p>生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-        </div>
+                ## XLSX模板格式
 
-        <div class="metrics">
-            <div class="metric">
-                <h3>总测试数</h3>
-                <p>{total}</p>
-            </div>
-            <div class="metric">
-                <h3>通过</h3>
-                <p class="pass">{passed}</p>
-            </div>
-            <div class="metric">
-                <h3>失败</h3>
-                <p class="fail">{total - passed}</p>
-            </div>
-            <div class="metric">
-                <h3>通过率</h3>
-                <p class="{'pass' if pass_rate >= 80 else 'fail'}">{pass_rate:.1f}%</p>
-            </div>
-        </div>
+                ### test_cases Sheet (必需)
+                | 字段 | 说明 | 必需 |
+                |------|------|------|
+                | id | 测试用例ID | ✓ |
+                | scenario_id | 场景ID | ✓ |
+                | phase | 阶段名称 | ✓ |
+                | description | 描述 | ✓ |
+                | input | 输入数据(JSON) | |
+                | expected_output | 期望输出(JSON) | |
+                | priority | 优先级(P0/P1/P2) | |
+                | tags | 标签(逗号分隔) | |
 
-        <h2>详细结果</h2>
-        <table>
-            <tr>
-                <th>测试用例ID</th>
-                <th>阶段</th>
-                <th>分数</th>
-                <th>置信度</th>
-                <th>状态</th>
-            </tr>
-    """
+                ### scenarios Sheet
+                | 字段 | 说明 |
+                |------|------|
+                | id | 场景ID |
+                | name | 场景名称 |
+                | description | 描述 |
+                | test_case_ids | 关联的测试用例ID(逗号分隔) |
+                """)
 
-    for r in results:
-        status = "通过" if r["passed"] else "失败"
-        status_class = "pass" if r["passed"] else "fail"
-        html += f"""
-            <tr>
-                <td>{r['test_case_id']}</td>
-                <td>{r['phase']}</td>
-                <td>{r['score']:.3f}</td>
-                <td>{r['confidence']:.3f}</td>
-                <td class="{status_class}">{status}</td>
-            </tr>
-        """
+        # 页脚
+        gr.Markdown("""
+        ---
+        **AI Testing Benchmark v2.0** | 基于配置驱动的AI评测框架
+        """)
 
-    html += """
-        </table>
-    </body>
-    </html>
-    """
-
-    return html
+    return app
 
 
-def get_mime_type(format: str) -> str:
-    """获取MIME类型。"""
-    mime_types = {
-        "JSON": "application/json",
-        "YAML": "application/x-yaml",
-        "CSV": "text/csv",
-        "HTML": "text/html"
-    }
-    return mime_types.get(format, "text/plain")
-
-
-def main():
-    """主函数。"""
-    st.markdown('<p class="main-header">🧪 AI Testing Benchmark</p>', unsafe_allow_html=True)
-    st.markdown("配置驱动的AI评测框架 - 支持XLSX多Sheet导入")
-
-    render_sidebar()
-
-    # 主内容区
-    tabs = st.tabs([
-        "📁 上传测试套件",
-        "📊 测试套件概览",
-        "⚙️ 执行评测",
-        "🔍 结果详情",
-        "⚙️ 配置管理",
-        "📤 导出报告"
-    ])
-
-    with tabs[0]:
-        render_upload_section()
-
-    with tabs[1]:
-        render_test_suite_overview()
-
-    with tabs[2]:
-        render_test_execution()
-
-    with tabs[3]:
-        render_results_detail()
-
-    with tabs[4]:
-        render_configuration_editor()
-
-    with tabs[5]:
-        render_export()
-
+# ==================== 启动应用 ====================
 
 if __name__ == "__main__":
-    main()
+    # 初始化评分引擎
+    state.scoring_engine = ScoringEngine()
+
+    # 创建并启动应用
+    app = create_app()
+    app.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        show_error=True
+    )
