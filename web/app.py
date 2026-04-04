@@ -216,6 +216,165 @@ def create_confidence_chart(results: List[Dict]) -> go.Figure:
     return fig
 
 
+def create_dimension_radar_chart(results: List[Dict]) -> go.Figure:
+    """创建多维度雷达图。"""
+    if not results:
+        return go.Figure()
+
+    # 按阶段分组计算平均分
+    phase_scores = {}
+    for r in results:
+        phase = r.get("phase_key", r.get("phase", "未知"))
+        if phase not in phase_scores:
+            phase_scores[phase] = []
+        phase_scores[phase].append(r["score"])
+
+    phase_avg = {k: sum(v) / len(v) for k, v in phase_scores.items()}
+
+    # 中文名称映射
+    labels = [get_chinese_phase_name(k) for k in phase_avg.keys()]
+    values = list(phase_avg.values())
+
+    # 雷达图
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
+        r=values + [values[0]] if values else [0],
+        theta=labels + [labels[0]] if labels else [""],
+        fill='toself',
+        fillcolor='rgba(52, 152, 219, 0.3)',
+        line=dict(color='#3498db', width=2),
+        name='维度评分'
+    ))
+
+    fig.update_layout(
+        height=400,
+        title="多维度评测雷达图",
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 1]
+            )
+        ),
+        showlegend=False
+    )
+    return fig
+
+
+def create_dimension_scorecard(results: List[Dict]) -> List[Dict]:
+    """创建维度分数卡片数据。"""
+    if not results:
+        return []
+
+    # 按阶段分组计算各项指标
+    phase_stats = {}
+    for r in results:
+        phase_key = r.get("phase_key", r.get("phase", "未知"))
+        phase_name = get_chinese_phase_name(phase_key)
+
+        if phase_key not in phase_stats:
+            phase_stats[phase_key] = {
+                "phase_name": phase_name,
+                "phase_key": phase_key,
+                "scores": [],
+                "passed": 0,
+                "total": 0
+            }
+
+        phase_stats[phase_key]["scores"].append(r["score"])
+        phase_stats[phase_key]["total"] += 1
+        if r.get("passed", False):
+            phase_stats[phase_key]["passed"] += 1
+
+    # 计算汇总数据
+    cards = []
+    for phase_key, stats in phase_stats.items():
+        avg_score = sum(stats["scores"]) / len(stats["scores"]) if stats["scores"] else 0
+        pass_rate = (stats["passed"] / stats["total"] * 100) if stats["total"] > 0 else 0
+
+        # 状态颜色
+        if avg_score >= 0.8:
+            status_color = "#27ae60"  # 绿色
+            status_text = "优秀"
+        elif avg_score >= 0.6:
+            status_color = "#f39c12"  # 橙色
+            status_text = "良好"
+        else:
+            status_color = "#e74c3c"  # 红色
+            status_text = "需改进"
+
+        cards.append({
+            "维度": stats["phase_name"],
+            "平均分": f"{avg_score:.3f}",
+            "通过数": f"{stats['passed']}/{stats['total']}",
+            "通过率": f"{pass_rate:.1f}%",
+            "状态": status_text,
+            "color": status_color
+        })
+
+    # 计算总分
+    total_score = sum(r["score"] for r in results) / len(results) if results else 0
+    total_passed = sum(1 for r in results if r.get("passed", False))
+    total_rate = (total_passed / len(results) * 100) if results else 0
+
+    # 添加总分卡片
+    cards.insert(0, {
+        "维度": "总分",
+        "平均分": f"{total_score:.3f}",
+        "通过数": f"{total_passed}/{len(results)}",
+        "通过率": f"{total_rate:.1f}%",
+        "状态": "优秀" if total_score >= 0.8 else "良好" if total_score >= 0.6 else "需改进",
+        "color": "#27ae60" if total_score >= 0.8 else "#f39c12" if total_score >= 0.6 else "#e74c3c"
+    })
+
+    return cards
+
+
+def create_phase_summary_table(results: List[Dict]) -> pd.DataFrame:
+    """创建各阶段汇总表格。"""
+    if not results:
+        return pd.DataFrame()
+
+    # 按阶段分组计算各项指标
+    phase_stats = {}
+    for r in results:
+        phase_key = r.get("phase_key", r.get("phase", "未知"))
+        phase_name = get_chinese_phase_name(phase_key)
+
+        if phase_key not in phase_stats:
+            phase_stats[phase_key] = {
+                "phase_name": phase_name,
+                "scores": [],
+                "passed": 0,
+                "total": 0
+            }
+
+        phase_stats[phase_key]["scores"].append(r["score"])
+        phase_stats[phase_key]["total"] += 1
+        if r.get("passed", False):
+            phase_stats[phase_key]["passed"] += 1
+
+    # 构建表格数据
+    table_data = []
+    for phase_key, stats in phase_stats.items():
+        avg_score = sum(stats["scores"]) / len(stats["scores"]) if stats["scores"] else 0
+        min_score = min(stats["scores"]) if stats["scores"] else 0
+        max_score = max(stats["scores"]) if stats["scores"] else 0
+        pass_rate = (stats["passed"] / stats["total"] * 100) if stats["total"] > 0 else 0
+
+        table_data.append({
+            "维度": stats["phase_name"],
+            "测试数": stats["total"],
+            "通过数": stats["passed"],
+            "通过率": f"{pass_rate:.1f}%",
+            "平均分": f"{avg_score:.3f}",
+            "最低分": f"{min_score:.3f}",
+            "最高分": f"{max_score:.3f}"
+        })
+
+    return pd.DataFrame(table_data)
+
+
 def simulate_evaluation(tc: TestCase) -> ScoreResult:
     """模拟评测。"""
     base_score = random.uniform(0.6, 0.95)
@@ -230,10 +389,10 @@ def simulate_evaluation(tc: TestCase) -> ScoreResult:
     )
 
 
-def parse_xlsx_file(file_obj, progress=gr.Progress()) -> Dict[str, Any]:
+def parse_xlsx_file(file_obj, progress=gr.Progress()) -> tuple:
     """解析上传的XLSX文件。"""
     if file_obj is None:
-        return {"success": False, "message": "请上传文件"}
+        return "请上传文件", pd.DataFrame()
 
     try:
         # 模拟加载状态
@@ -277,6 +436,16 @@ def parse_xlsx_file(file_obj, progress=gr.Progress()) -> Dict[str, Any]:
             for phase, count in phase_counts.items()
         ])
 
+        # 生成维度预览表格
+        dimension_data = []
+        for phase, count in phase_counts.items():
+            dimension_data.append({
+                "维度": get_chinese_phase_name(phase),
+                "阶段Key": phase,
+                "测试用例数": count
+            })
+        dimension_df = pd.DataFrame(dimension_data)
+
         progress(1.0, desc="加载完成!")
 
         message = f"""**加载成功!**
@@ -287,12 +456,12 @@ def parse_xlsx_file(file_obj, progress=gr.Progress()) -> Dict[str, Any]:
 **测试用例统计:**
 {phase_summary}
 
-**总计:** {len(state.test_suite.test_cases)}个测试用例, {len(state.test_suite.scenarios)}个场景
+**总计:** {len(state.test_suite.test_cases)}个测试用例, {len(state.test_suite.scenarios)}个场景, {len(phase_counts)}个维度
 """
-        return {"success": True, "message": message}
+        return message, dimension_df
 
     except Exception as e:
-        return {"success": False, "message": f"加载失败: {str(e)}"}
+        return f"加载失败: {str(e)}", pd.DataFrame()
 
 
 def get_suite_overview() -> gr.Blocks:
@@ -301,6 +470,25 @@ def get_suite_overview() -> gr.Blocks:
         return gr.Markdown("请先上传测试套件")
 
     suite = state.test_suite
+
+    # 按阶段分组统计
+    phase_cases = {}
+    for tc in suite.test_cases:
+        if tc.phase not in phase_cases:
+            phase_cases[tc.phase] = []
+        phase_cases[tc.phase].append(tc)
+
+    # 生成维度统计表格
+    phase_stats = []
+    for phase, cases in phase_cases.items():
+        phase_stats.append({
+            "维度": get_chinese_phase_name(phase),
+            "阶段Key": phase,
+            "测试用例数": len(cases),
+            "优先级分布": f"P0:{sum(1 for c in cases if c.priority=='P0')}, P1:{sum(1 for c in cases if c.priority=='P1')}, P2:{sum(1 for c in cases if c.priority=='P2')}"
+        })
+
+    phase_df = pd.DataFrame(phase_stats)
 
     md = f"""
 ## 📊 测试套件概览
@@ -311,22 +499,10 @@ def get_suite_overview() -> gr.Blocks:
 | **版本** | {suite.version} |
 | **测试用例** | {len(suite.test_cases)} |
 | **场景数** | {len(suite.scenarios)} |
-
-### 测试用例列表
+| **维度数** | {len(phase_cases)} |
 """
 
-    # 按阶段分组
-    phase_cases = {}
-    for tc in suite.test_cases:
-        if tc.phase not in phase_cases:
-            phase_cases[tc.phase] = []
-        phase_cases[tc.phase].append(tc)
-
-    for phase, cases in phase_cases.items():
-        md += f"\n#### {phase} ({len(cases)}个)\n"
-        for tc in cases:
-            priority_label = f"[{tc.priority}]"  # P0/P1/P2 text labels per DESIGN.md
-            md += f"- {priority_label} `{tc.id}`: {tc.description[:60]}...\n"
+    md += "\n### 各维度测试用例统计\n"
 
     return gr.Markdown(md)
 
@@ -343,13 +519,13 @@ def run_evaluation(
 
     # 防重复提交检查
     if state.evaluation_in_progress:
-        return "⏳ 评测正在进行中，请稍候...", None, None, None, None
+        return "⏳ 评测正在进行中，请稍候...", None, None, None, None, None, None, None
 
     if state.test_suite is None:
-        return "请先上传测试套件", None, None, None, None
+        return "请先上传测试套件", None, None, None, None, None, None, None
 
     if not phases:
-        return "请至少选择一个阶段", None, None, None, None
+        return "请至少选择一个阶段", None, None, None, None, None, None, None
 
     # 获取锁
     with state.evaluation_lock:
@@ -363,7 +539,7 @@ def run_evaluation(
         ][:max_samples]
 
         if not filtered_cases:
-            return "没有找到匹配的测试用例", None, None, None, None
+            return "没有找到匹配的测试用例", None, None, None, None, None, None, None
 
         # 执行评测
         results = []
@@ -415,17 +591,32 @@ def run_evaluation(
         # 生成表格数据
         table_data = pd.DataFrame(results)
 
+        # 生成分页后的表格数据（每页20条）
+        page_size = 20
+        total_pages = max(1, (len(table_data) + page_size - 1) // page_size)
+        page_table_data = table_data.head(page_size)
+
+        # 生成维度汇总表格
+        phase_summary_df = create_phase_summary_table(results)
+
         # 生成图表
         score_chart = create_score_chart(results)
         pass_rate_chart = create_pass_rate_chart(results)
         confidence_chart = create_confidence_chart(results)
+        radar_chart = create_dimension_radar_chart(results)
+
+        # 生成分页信息
+        pagination_info = f"第 1 / {total_pages} 页 (共 {total} 条记录)"
 
         return (
             summary,
-            table_data,
+            page_table_data,
             gr.Plot(value=score_chart),
             gr.Plot(value=pass_rate_chart),
-            gr.Plot(value=confidence_chart)
+            gr.Plot(value=confidence_chart),
+            gr.Plot(value=radar_chart),
+            phase_summary_df,
+            pagination_info
         )
 
     finally:
@@ -433,11 +624,30 @@ def run_evaluation(
         state.evaluation_in_progress = False
 
 
-def get_results_table() -> pd.DataFrame:
-    """获取结果表格。"""
+def get_results_table(page: int = 1, page_size: int = 20) -> tuple:
+    """获取分页后的结果表格。"""
     if not state.results:
-        return pd.DataFrame()
-    return pd.DataFrame(state.results)
+        return pd.DataFrame(), "第 1 / 1 页 (共 0 条记录)"
+
+    all_data = pd.DataFrame(state.results)
+    total = len(all_data)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+
+    # 确保页码在有效范围内
+    page = max(1, min(page, total_pages))
+
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+
+    page_data = all_data.iloc[start_idx:end_idx]
+    pagination_info = f"第 {page} / {total_pages} 页 (共 {total} 条记录)"
+
+    return page_data, pagination_info
+
+
+def get_results_table_first_page() -> tuple:
+    """获取结果表格第一页。"""
+    return get_results_table(page=1)
 
 
 def export_report(format: str) -> str:
@@ -515,34 +725,32 @@ def get_config_editor() -> Dict[str, Any]:
 
 # ==================== 界面布局 ====================
 
+# 主题设置 — Soft theme with orange primary (per DESIGN.md)
+# Orange hue replaces default blue; neutral stays warm gray
+APP_THEME = gr.themes.Soft(
+    primary_hue="orange",
+    neutral_hue="gray",
+    font=[gr.themes.GoogleFont("DM Sans"), "ui-sans-serif", "system-ui"]
+)
+
+APP_CSS = """
+/* DESIGN.md: Brutally Minimal + Warm Neutrals */
+.main-header { text-align: center; padding: 20px; }
+.metric-card { background: #1a1a1a; padding: 20px; border-radius: 8px; color: #FAFAF8; }
+.success-box { background: rgba(45,106,79,0.1); border-left: 3px solid #2D6A4F; padding: 15px; border-radius: 4px; }
+.warning-box { background: rgba(188,108,37,0.1); border-left: 3px solid #BC6C25; padding: 15px; border-radius: 4px; }
+.error-box { background: rgba(155,34,38,0.1); border-left: 3px solid #9B2226; padding: 15px; border-radius: 4px; }
+.gradio-container { background: #FAFAF8; }
+/* Typography per DESIGN.md */
+.main-header h1 { font-family: 'DM Sans', sans-serif; font-weight: 700; }
+/* Data tables use mono for numbers */
+.dataframe { font-family: 'DM Sans', sans-serif; }
+"""
+
 def create_app():
     """创建Gradio应用。"""
 
-    # 主题设置 — Soft theme with orange primary (per DESIGN.md)
-    # Orange hue replaces default blue; neutral stays warm gray
-    theme = gr.themes.Soft(
-        primary_hue="orange",
-        neutral_hue="gray",
-        font=[gr.themes.GoogleFont("DM Sans"), "ui-sans-serif", "system-ui"]
-    )
-
-    with gr.Blocks(
-        theme=theme,
-        title="AI Testing Benchmark",
-        css="""
-        /* DESIGN.md: Brutally Minimal + Warm Neutrals */
-        .main-header { text-align: center; padding: 20px; }
-        .metric-card { background: #1a1a1a; padding: 20px; border-radius: 8px; color: #FAFAF8; }
-        .success-box { background: rgba(45,106,79,0.1); border-left: 3px solid #2D6A4F; padding: 15px; border-radius: 4px; }
-        .warning-box { background: rgba(188,108,37,0.1); border-left: 3px solid #BC6C25; padding: 15px; border-radius: 4px; }
-        .error-box { background: rgba(155,34,38,0.1); border-left: 3px solid #9B2226; padding: 15px; border-radius: 4px; }
-        .gradio-container { background: #FAFAF8; }
-        /* Typography per DESIGN.md */
-        .main-header h1 { font-family: 'DM Sans', sans-serif; font-weight: 700; }
-        /* Data tables use mono for numbers */
-        .dataframe { font-family: 'DM Sans', sans-serif; }
-        """
-    ) as app:
+    with gr.Blocks(title="AI Testing Benchmark") as app:
 
         # 页头
         gr.Markdown("""
@@ -567,15 +775,21 @@ def create_app():
                     with gr.Column(scale=2):
                         upload_output = gr.Markdown("请上传XLSX格式的测试套件文件")
 
-                upload_btn.click(
-                    fn=parse_xlsx_file,
-                    inputs=[file_input],
-                    outputs=[upload_output]
-                )
-
                 gr.Markdown("---")
                 gr.Markdown("### Sheet预览")
                 sheet_preview = gr.DataFrame(headers=["名称", "类型", "行数", "列数"])
+
+                gr.Markdown("### 📊 维度分布预览")
+                dimension_preview = gr.DataFrame(
+                    label="各维度测试用例数量",
+                    wrap=True
+                )
+
+                upload_btn.click(
+                    fn=parse_xlsx_file,
+                    inputs=[file_input],
+                    outputs=[upload_output, dimension_preview]
+                )
 
                 with gr.Row():
                     suite_overview = gr.Markdown("请先上传测试套件")
@@ -598,9 +812,14 @@ def create_app():
                                 "spec_recommendation": "规格推荐",
                                 "compatibility": "兼容性评估",
                                 "report_generation": "报告生成",
+                                "foundation": "基础评估",
+                                "dialogue": "对话评估",
+                                "migration": "迁移评估",
+                                "safety": "安全评估",
+                                "performance": "性能评估",
                             },
                             multiselect=True,
-                            value=["resource_import", "cloud_strategy"]
+                            value=["foundation", "dialogue", "migration"]
                         )
 
                         max_samples = gr.Slider(
@@ -612,38 +831,119 @@ def create_app():
                         )
 
                         run_btn = gr.Button("开始评测", variant="primary", size="lg")
-                        results_table = gr.DataFrame(
-                            label="测试结果",
-                            wrap=True
-                        )
 
                     with gr.Column(scale=2):
                         eval_summary = gr.Markdown("点击\"开始评测\"按钮执行测试")
 
+                gr.Markdown("---")
+                gr.Markdown("### 📊 维度评分总览")
+                phase_summary_table = gr.DataFrame(
+                    label="各维度评测汇总",
+                    wrap=True
+                )
+
                 gr.Markdown("### 可视化结果")
                 with gr.Row():
-                    score_chart = gr.Plot(label="分数分析")
-                    pass_rate_chart = gr.Plot(label="通过率分析")
+                    with gr.Column(scale=1):
+                        score_chart = gr.Plot(label="分数分析")
+                    with gr.Column(scale=1):
+                        radar_chart = gr.Plot(label="多维度雷达图")
 
-                confidence_chart = gr.Plot(label="置信度分析")
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        pass_rate_chart = gr.Plot(label="通过率分析")
+                    with gr.Column(scale=1):
+                        confidence_chart = gr.Plot(label="置信度分析")
 
-                # 运行评测按钮事件 (在所有输出组件定义之后)
+                gr.Markdown("---")
+                gr.Markdown("### 📋 测试结果详情")
+
+                # 分页控制
+                with gr.Row():
+                    prev_page_btn = gr.Button("上一页", size="sm")
+                    pagination_info = gr.Textbox(label="分页信息", lines=1, interactive=False)
+                    next_page_btn = gr.Button("下一页", size="sm")
+                    page_size_selector = gr.Dropdown(
+                        label="每页条数",
+                        choices=[10, 20, 50, 100],
+                        value=20,
+                        scale=1
+                    )
+
+                results_table = gr.DataFrame(
+                    label="测试结果",
+                    wrap=True
+                )
+
+                # 运行评测按钮事件
                 run_btn.click(
                     fn=run_evaluation,
                     inputs=[phase_selector, max_samples],
-                    outputs=[eval_summary, results_table, score_chart, pass_rate_chart, confidence_chart]
+                    outputs=[eval_summary, results_table, score_chart, pass_rate_chart, confidence_chart, radar_chart, phase_summary_table, pagination_info]
+                )
+
+                # 分页按钮事件
+                current_page_state = gr.State(value={"page": 1, "page_size": 20})
+
+                def next_page(page_state):
+                    page_state["page"] += 1
+                    return get_results_table(page_state["page"], page_state["page_size"])
+
+                def prev_page(page_state):
+                    if page_state["page"] > 1:
+                        page_state["page"] -= 1
+                    return get_results_table(page_state["page"], page_state["page_size"])
+
+                next_page_btn.click(
+                    fn=next_page,
+                    inputs=[current_page_state],
+                    outputs=[results_table, pagination_info]
+                )
+
+                prev_page_btn.click(
+                    fn=prev_page,
+                    inputs=[current_page_state],
+                    outputs=[results_table, pagination_info]
                 )
 
             # ==================== Tab 3: 结果详情 ====================
             with gr.TabItem("结果详情"):
                 gr.Markdown("### 评测结果详情")
 
-                refresh_btn = gr.Button("刷新结果")
+                gr.Markdown("#### 各维度汇总")
+                detail_phase_summary = gr.DataFrame(label="维度汇总", wrap=True)
 
-                # results_table is defined in Tab 2 and shared here
-                refresh_btn.click(
-                    fn=get_results_table,
-                    outputs=[results_table]
+                gr.Markdown("#### 测试结果列表")
+                detail_pagination_info = gr.Textbox(label="分页信息", lines=1, interactive=False)
+                detail_results_table = gr.DataFrame(label="测试结果", wrap=True)
+
+                with gr.Row():
+                    detail_prev_btn = gr.Button("上一页", size="sm")
+                    detail_next_btn = gr.Button("下一页", size="sm")
+
+                def refresh_detail():
+                    if not state.results:
+                        return pd.DataFrame(), pd.DataFrame(), "第 1 / 1 页 (共 0 条记录)"
+                    phase_summary = create_phase_summary_table(state.results)
+                    first_page, pagination = get_results_table(page=1, page_size=20)
+                    return phase_summary, first_page, pagination
+
+                refresh_detail_btn = gr.Button("刷新结果")
+                refresh_detail_btn.click(
+                    fn=refresh_detail,
+                    outputs=[detail_phase_summary, detail_results_table, detail_pagination_info]
+                )
+
+                detail_next_btn.click(
+                    fn=lambda ps: get_results_table(ps["page"] + 1, ps["page_size"]),
+                    inputs=[gr.State({"page": 1, "page_size": 20})],
+                    outputs=[detail_results_table, detail_pagination_info]
+                )
+
+                detail_prev_btn.click(
+                    fn=lambda ps: get_results_table(max(1, ps["page"] - 1), ps["page_size"]),
+                    inputs=[gr.State({"page": 2, "page_size": 20})],
+                    outputs=[detail_results_table, detail_pagination_info]
                 )
 
             # ==================== Tab 4: 报告导出 ====================
@@ -780,5 +1080,7 @@ if __name__ == "__main__":
         server_name="0.0.0.0",
         server_port=7860,
         share=False,
-        show_error=True
+        show_error=True,
+        theme=APP_THEME,
+        css=APP_CSS
     )
