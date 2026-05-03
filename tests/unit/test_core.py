@@ -55,7 +55,7 @@ class TestMetricsCalculator:
     def test_aggregate_scores(self):
         """Test score aggregation."""
         scores = [0.8, 0.9, 0.7, 0.85]
-        assert MetricsCalculator.aggregate_scores(scores, "mean") == 0.81
+        assert MetricsCalculator.aggregate_scores(scores, "mean") == pytest.approx(0.8125)
         assert MetricsCalculator.aggregate_scores(scores, "max") == 0.9
         assert MetricsCalculator.aggregate_scores(scores, "min") == 0.7
 
@@ -104,7 +104,7 @@ class TestPhaseResult:
             test_case_name="Test 1",
             category="foundation",
             phase="foundation",
-            passed=True,
+            status=ResultStatus.PASS,
             score=85.0
         )
 
@@ -113,7 +113,7 @@ class TestPhaseResult:
             test_case_name="Test 2",
             category="foundation",
             phase="foundation",
-            passed=False,
+            status=ResultStatus.FAIL,
             score=70.0
         )
 
@@ -136,7 +136,7 @@ class TestPhaseResult:
                 test_case_name=f"Test {i}",
                 category="foundation",
                 phase="foundation",
-                passed=True,
+                status=ResultStatus.PASS,
                 score=85.0
             )
             phase.add_result(result)
